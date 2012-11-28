@@ -1,0 +1,34 @@
+---
+abstract: 'Sane APIs for IP addresses and networks'
+author:
+  - 'Dave Rolsky <autarch@urth.org>'
+  - 'Olaf Alders <olaf@wundercounter.com>'
+build_requires:
+  Test::Fatal: 0
+  Test::More: 0.88
+configure_requires:
+  ExtUtils::MakeMaker: 6.30
+dynamic_config: 0
+generated_by: 'Dist::Zilla version 4.300028, CPAN::Meta::Converter version 2.120921'
+license: artistic_2
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: Net-Works
+requires:
+  Carp: 0
+  List::AllUtils: 0
+  Moose: 0
+  NetAddr::IP: 0
+  NetAddr::IP::Util: 0
+  Scalar::Util: 0
+  bigint: 0
+  namespace::autoclean: 0
+  overload: 0
+  strict: 0
+  warnings: 0
+resources:
+  bugtracker: http://rt.cpan.org/NoAuth/Bugs.html?Dist=Net-Works
+  repository: git://github.com/maxmind/Net-Works.git
+version: 0.01
+x_authority: cpan:DROLSKY
