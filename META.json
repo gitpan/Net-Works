@@ -28,14 +28,21 @@
       "runtime" : {
          "requires" : {
             "Carp" : "0",
+            "Data::Validate::IP" : "0",
             "List::AllUtils" : "0",
+            "Math::BigInt" : "0",
             "Moose" : "0",
-            "NetAddr::IP" : "0",
+            "Moose::Role" : "0",
+            "MooseX::Types" : "0",
+            "MooseX::Types::Combine" : "0",
+            "MooseX::Types::Moose" : "0",
             "NetAddr::IP::Util" : "0",
             "Scalar::Util" : "0",
-            "bigint" : "0",
+            "Socket" : "0",
+            "integer" : "0",
             "namespace::autoclean" : "0",
             "overload" : "0",
+            "parent" : "0",
             "strict" : "0",
             "warnings" : "0"
          }
@@ -43,7 +50,8 @@
       "test" : {
          "requires" : {
             "Test::Fatal" : "0",
-            "Test::More" : "0.88"
+            "Test::More" : "0.88",
+            "bigint" : "0"
          }
       }
    },
@@ -59,7 +67,7 @@
          "web" : "https://github.com/maxmind/Net-Works"
       }
    },
-   "version" : "0.01",
+   "version" : "0.02",
    "x_authority" : "cpan:DROLSKY"
 }
 

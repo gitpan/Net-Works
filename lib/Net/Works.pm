@@ -1,6 +1,6 @@
 package Net::Works;
 {
-  $Net::Works::VERSION = '0.01';
+  $Net::Works::VERSION = '0.02';
 }
 BEGIN {
   $Net::Works::AUTHORITY = 'cpan:DROLSKY';
@@ -20,17 +20,19 @@ Net::Works - Sane APIs for IP addresses and networks
 
 =head1 VERSION
 
-version 0.01
+version 0.02
 
 =head1 DESCRIPTION
 
-The L<NetAddr::IP> module is very complete, correct, and useful. However, it's
+The L<NetAddr::IP> module is very complete, correct, and useful. However, its
 API design is a bit crufty. This distro provides wrappers around
 L<NetAddr::IP> that aim to address the biggest problems with that module's
 API, as well as adding some additional features.
 
-This distro contains two module, L<Net::Works::Address> and
+This distro contains two modules, L<Net::Works::Address> and
 L<Net::Works::Network>.
+
+B<NOTE: This distro's APIs are still in flux. Use at your own risk.>
 
 =head1 BIG INTEGERS
 
@@ -54,7 +56,7 @@ a /32 or /128 subnet.
 =item * Multiple constructors
 
 L<Net::Works> allows you to construct an IP address from a string ("1.2.3.4")
-or an integer (1097).
+or an integer (1097) using separate constructors.
 
 =item * Next & previous IP
 

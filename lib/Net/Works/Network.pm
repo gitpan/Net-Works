@@ -1,6 +1,6 @@
 package Net::Works::Network;
 {
-  $Net::Works::Network::VERSION = '0.01';
+  $Net::Works::Network::VERSION = '0.02';
 }
 BEGIN {
   $Net::Works::Network::AUTHORITY = 'cpan:DROLSKY';
@@ -10,21 +10,19 @@ use strict;
 use warnings;
 use namespace::autoclean;
 
-use List::AllUtils qw( any first );
+use Data::Validate::IP qw( is_ipv4 is_ipv6 );
+use List::AllUtils qw( any );
+use Math::BigInt try => 'GMP,Pari,FastCalc';
 use Net::Works::Address;
-use NetAddr::IP;
+use Net::Works::Types qw( Int IPInt Str );
+use NetAddr::IP::Util qw( bin2bcd );
+use Socket qw( inet_pton AF_INET AF_INET6 );
+
+use integer;
 
 use Moose;
 
-has _netmask => (
-    is      => 'ro',
-    isa     => 'NetAddr::IP',
-    handles => {
-        netmask_as_integer => 'masklen',
-        mask_length        => 'bits',
-        version            => 'version',
-    },
-);
+with 'Net::Works::Role::IP';
 
 has first => (
     is       => 'ro',
@@ -42,46 +40,96 @@ has last => (
     builder  => '_build_last',
 );
 
+has mask_length => (
+    is       => 'ro',
+    isa      => Int,
+    required => 1,
+);
+
+has _address_string => (
+    is  => 'ro',
+    isa => Str,
+);
+
+has _address_integer => (
+    is       => 'ro',
+    isa      => IPInt,
+    init_arg => undef,
+    lazy     => 1,
+    builder  => '_build_address_integer'
+);
+
+has _subnet_integer => (
+    is       => 'ro',
+    isa      => IPInt,
+    init_arg => undef,
+    lazy     => 1,
+    builder  => '_build_subnet_integer',
+);
+
 override BUILDARGS => sub {
     my $self = shift;
 
     my $p = super();
 
-    my $constructor = $p->{version} && $p->{version} == 6 ? 'new6' : 'new';
+    my ( $address, $masklen ) = split '/', $p->{subnet};
 
-    my $nm = NetAddr::IP->$constructor( $p->{subnet} )
-        or die "Invalid subnet specifier - [$p->{subnet}]";
+    my $version = $p->{version} ? $p->{version} : is_ipv6($address) ? 6 : 4;
 
-    return { _netmask => $nm };
+    if ( $version == 6 && is_ipv4($address) ) {
+        $masklen += 96;
+        $address = '::' . $address;
+    }
+
+    return {
+        _address_string => $address,
+        mask_length     => $masklen,
+        version         => $version,
+    };
 };
 
-{
-    my %max = (
-        32  => 2**32 - 1,
-        128 => do { use bigint; 2**128 - 1 },
-    );
+sub _build_address_integer {
+    my $self = shift;
 
-    sub max_netmask_as_integer {
-        my $self = shift;
+    my $packed = inet_pton( $self->address_family(), $self->_address_string() );
 
-        my $base = $self->first()->as_integer();
+    return $self->version == 4
+        ? unpack( N => $packed )
+        : Math::BigInt->new( bin2bcd($packed) );
+}
 
-        my $netmask = $self->netmask_as_integer();
+sub bits { $_[0]->version == 6 ? 128 : 32 }
 
-        my $bits = $self->_netmask()->bits();
-        while ($netmask) {
-            my $mask = do {
-                use bigint;
-                ( ~( 2**( $bits - $netmask ) - 1 ) & $max{$bits} );
-            };
+sub _build_subnet_integer {
+    my $self = shift;
 
-            last if ( $base & $mask ) != $base;
+    return $self->_mask_length_to_mask( $self->mask_length() );
+}
 
-            $netmask--;
-        }
+sub _mask_length_to_mask {
+    my $self    = shift;
+    my $masklen = shift;
 
-        return $netmask + 1;
+    return $self->_max() & ( $self->_max() << ( $self->bits - $masklen ) );
+}
+
+sub max_mask_length {
+    my $self = shift;
+
+    my $base = $self->first()->as_integer();
+
+    my $netmask = $self->mask_length();
+
+    my $bits = $self->bits;
+    while ($netmask) {
+        my $mask = $self->_mask_length_to_mask($netmask);
+
+        last if ( $base & $mask ) != $base;
+
+        $netmask--;
     }
+
+    return $netmask + 1;
 }
 
 sub iterator {
@@ -104,18 +152,16 @@ sub iterator {
 sub as_string {
     my $self = shift;
 
-    my $netmask = $self->_netmask();
-
-    return $self->version() == 6
-        ? ( join '/', lc $netmask->short(), $netmask->masklen() )
-        : $netmask->cidr();
+    return join '/', lc $self->_address_string(), $self->mask_length();
 }
 
 sub _build_first {
     my $self = shift;
 
-    return Net::Works::Address->new_from_string(
-        string  => $self->_netmask()->network()->addr(),
+    my $id = $self->_address_integer() & $self->_subnet_integer();
+
+    return Net::Works::Address->new_from_integer(
+        integer => $id,
         version => $self->version(),
     );
 }
@@ -123,28 +169,13 @@ sub _build_first {
 sub _build_last {
     my $self = shift;
 
-    return Net::Works::Address->new_from_string(
-        string  => $self->_netmask()->broadcast()->addr(),
+    my $broadcast
+        = $self->_address_integer() | ( $self->_max() & ~$self->_subnet_integer() );
+
+    return Net::Works::Address->new_from_integer(
+        integer => $broadcast,
         version => $self->version(),
     );
-}
-
-sub _remove_reserved_subnets_from_range {
-    my $class   = shift;
-    my $first   = shift;
-    my $last    = shift;
-    my $version = shift;
-
-    my @ranges;
-
-    $class->_remove_reserved_subnets_from_range_r(
-        $first,
-        $last,
-        $version,
-        \@ranges
-    );
-
-    return @ranges;
 }
 
 {
@@ -170,51 +201,47 @@ sub _remove_reserved_subnets_from_range {
 
     my %reserved_networks = (
         4 => [
-            map { Net::Works::Network->new( subnet => $_, version => 4 ) }
+            sort { $a->first <=> $b->first }
+                map { Net::Works::Network->new( subnet => $_, version => 4 ) }
                 @reserved_4,
         ],
         6 => [
-            map { Net::Works::Network->new( subnet => $_, version => 6 ) }
+            sort { $a->first <=> $b->first }
+                map { Net::Works::Network->new( subnet => $_, version => 6 ) }
                 @reserved_6,
         ],
     );
 
-    sub _remove_reserved_subnets_from_range_r {
+    sub _remove_reserved_subnets_from_range {
         my $class   = shift;
         my $first   = shift;
         my $last    = shift;
         my $version = shift;
-        my $ranges  = shift;
+
+        my @ranges;
+        my $add_remaining = 1;
 
         for my $pn ( @{ $reserved_networks{$version} } ) {
             my $reserved_first = $pn->first();
             my $reserved_last  = $pn->last();
 
-            next if ( $last < $reserved_first || $first > $reserved_last );
+            next if ( $reserved_last <= $first );
+            last if ( $last < $reserved_first );
 
-            if ( $first >= $reserved_first and $last <= $reserved_last ) {
+            push @ranges, [ $first, $reserved_first->previous_ip() ]
+                if $first < $reserved_first;
 
-                # just remove the range, it is completely in a reserved network
-                return;
+            if ( $last <= $reserved_last ) {
+                $add_remaining = 0;
+                last;
             }
 
-            $class->_remove_reserved_subnets_from_range_r(
-                $first,
-                $reserved_first->previous_ip(),
-                $version,
-                $ranges,
-            ) if ( $first < $reserved_first );
-
-            $class->_remove_reserved_subnets_from_range_r(
-                $reserved_last->next_ip(),
-                $last,
-                $version,
-                $ranges,
-            ) if ( $last > $reserved_last );
-            return;
+            $first = $reserved_last->next_ip();
         }
 
-        push @{$ranges}, [ $first, $last ];
+        push @ranges, [ $first, $last ] if $add_remaining;
+
+        return @ranges;
     }
 }
 
@@ -256,23 +283,9 @@ sub _split_one_range {
 
     my $version = $first->version();
 
-    my $bits = $version == 6 ? 128 : 32;
-
     my @subnets;
     while ( $first <= $last ) {
-        my $smallest_subnet = Net::Works::Network->new(
-            subnet  => $first . '/' . $bits,
-            version => $version,
-        );
-
-        my $max_network = first { $_->last() <= $last } (
-            map {
-                Net::Works::Network->new(
-                    subnet  => $first . '/' . $_,
-                    version => $version,
-                    )
-            } $smallest_subnet->max_netmask_as_integer() .. $bits
-        );
+        my $max_network = _max_subnet( $first, $last );
 
         push @subnets, $max_network;
 
@@ -280,6 +293,34 @@ sub _split_one_range {
     }
 
     return @subnets;
+}
+
+sub _max_subnet {
+    my $ip    = shift;
+    my $maxip = shift;
+
+    my $ipnum   = $ip->as_integer();
+    my $max     = $maxip->as_integer();
+    my $version = $ip->version();
+    my $masklen = $version == 6 ? 128 : 32;
+
+    my $v = $ipnum;
+    my $reverse_mask = $version == 6 ? Math::BigInt->new(1) : 1;
+
+    while (( $v & 1 ) == 0
+        && $masklen > 0
+        && ( $ipnum | $reverse_mask ) <= $max ) {
+
+        $masklen--;
+        $v = $v >> 1;
+
+        $reverse_mask = ( $reverse_mask << 1 ) | 1;
+    }
+
+    return Net::Works::Network->new(
+        subnet  => $ip . '/' . $masklen,
+        version => $version,
+    );
 }
 
 __PACKAGE__->meta()->make_immutable();
@@ -298,14 +339,14 @@ Net::Works::Network - An object representing a single IP address (4 or 6) subnet
 
 =head1 VERSION
 
-version 0.01
+version 0.02
 
 =head1 SYNOPSIS
 
   my $network = Net::Works::Network->new( subnet => '1.0.0.0/24' );
-  print $network->as_string();          # 1.0.0.0/28
-  print $network->netmask_as_integer(); # 24
-  print $network->mask_length();        # 32
+  print $network->as_string();          # 1.0.0.0/24
+  print $network->mask_length();        # 24
+  print $network->bits();               # 32
   print $network->version();            # 4
 
   my $first = $network->first();
@@ -318,7 +359,7 @@ version 0.01
   while ( my $ip = $iterator->() ) { ... }
 
   my $network = Net::Works::Network->new( subnet => '1.0.0.4/32' );
-  print $network->max_netmask_as_integer(); # 30
+  print $network->max_mask_length(); # 30
 
   # All methods work with IPv4 and IPv6 subnets
   my $network = Net::Works::Network->new( subnet => 'a800:f000::/20' );
@@ -334,7 +375,7 @@ version 0.01
 
 =head1 DESCRIPTION
 
-Objects of this class represent an IP address subnet. It can handle both IPv4
+Objects of this class represent an IP address network. It can handle both IPv4
 and IPv6 subnets. It provides various methods for getting information about
 the subnet.
 
@@ -354,42 +395,42 @@ This method takes a C<subnet> parameter and an optional C<version>
 parameter. The C<subnet> parameter should be a string representation of an IP
 address subnet.
 
-The C<version> parameter should be either C<4> or C<6>, but you don't really need
-this unless you're trying to force a dotted quad to be interpreted as an IPv6
-subnet or to a force an IPv6 address colon-separated hex number to be
-interpreted as an IPv4 subnet.
+The C<version> parameter should be either C<4> or C<6>, but you don't really
+need this unless you're trying to force a dotted quad to be interpreted as an
+IPv6 network or to a force an IPv6 address colon-separated hex number to be
+interpreted as an IPv4 network.
 
 =head2 $network->as_string()
 
-Returns a string representation of the subnet like "1.0.0.0/24" or
+Returns a string representation of the network like "1.0.0.0/24" or
 "a800:f000::/105".
 
 =head2 $network->version()
 
-Returns a 4 or 6 to indicate whether this is an IPv4 or IPv6 subnet.
-
-=head2 $network->netmask_as_integer()
-
-Returns the numeric subnet as passed to the constructor.
+Returns a 4 or 6 to indicate whether this is an IPv4 or IPv6 network.
 
 =head2 $network->mask_length()
 
-Returns the mask length for the subnet, which is either 32 (IPv4) or 128
-(IPv6).
+Returns the numeric network as passed to the constructor.
 
-=head2 $network->max_netmask_as_integer()
+=head2 $network->bits()
 
-This returns the maximum possible numeric subnet that this subnet could fit
+Returns the number of bit of an address in the network, which is either 32
+(IPv4) or 128 (IPv6).
+
+=head2 $network->max_mask_length()
+
+This returns the maximum possible numeric subnet that this network could fit
 in. In other words, the 1.1.1.0/32 subnet could be part of the 1.1.1.0/24
 subnet, so this returns 24.
 
 =head2 $network->first()
 
-Returns the first IP in the subnet as an L<Net::Works::Address> object.
+Returns the first IP in the network as an L<Net::Works::Address> object.
 
 =head2 $network->last()
 
-Returns the last IP in the subnet as an L<Net::Works::Address> object.
+Returns the last IP in the network as an L<Net::Works::Address> object.
 
 =head2 $network->iterator()
 
@@ -398,7 +439,7 @@ time it's called.
 
 For single address subnets (/32 or /128), this returns a single address.
 
-When it has exhausted all the addresses in the subnet, it returns C<undef>
+When it has exhausted all the addresses in the network, it returns C<undef>
 
 =head2 Net::Works::Network->range_as_subnets( $first, $last )
 
