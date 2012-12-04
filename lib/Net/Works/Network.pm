@@ -1,6 +1,6 @@
 package Net::Works::Network;
 {
-  $Net::Works::Network::VERSION = '0.02';
+  $Net::Works::Network::VERSION = '0.03';
 }
 BEGIN {
   $Net::Works::Network::AUTHORITY = 'cpan:DROLSKY';
@@ -74,7 +74,7 @@ override BUILDARGS => sub {
 
     my ( $address, $masklen ) = split '/', $p->{subnet};
 
-    my $version = $p->{version} ? $p->{version} : is_ipv6($address) ? 6 : 4;
+    my $version = $p->{version} ? $p->{version} : _is_ipv6($address) ? 6 : 4;
 
     if ( $version == 6 && is_ipv4($address) ) {
         $masklen += 96;
@@ -88,17 +88,21 @@ override BUILDARGS => sub {
     };
 };
 
+# Data::Validate::IP does not think '::' is a valid IPv6 address -
+# https://rt.cpan.org/Ticket/Display.html?id=81700
+sub _is_ipv6 {
+    return $_[0] eq '::' || is_ipv6($_[0]);
+}
+
 sub _build_address_integer {
     my $self = shift;
 
     my $packed = inet_pton( $self->address_family(), $self->_address_string() );
 
-    return $self->version == 4
+    return $self->version() == 4
         ? unpack( N => $packed )
         : Math::BigInt->new( bin2bcd($packed) );
 }
-
-sub bits { $_[0]->version == 6 ? 128 : 32 }
 
 sub _build_subnet_integer {
     my $self = shift;
@@ -339,7 +343,7 @@ Net::Works::Network - An object representing a single IP address (4 or 6) subnet
 
 =head1 VERSION
 
-version 0.02
+version 0.03
 
 =head1 SYNOPSIS
 

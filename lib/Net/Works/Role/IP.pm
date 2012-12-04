@@ -1,6 +1,6 @@
 package Net::Works::Role::IP;
 {
-  $Net::Works::Role::IP::VERSION = '0.02';
+  $Net::Works::Role::IP::VERSION = '0.03';
 }
 BEGIN {
   $Net::Works::Role::IP::AUTHORITY = 'cpan:DROLSKY';
@@ -43,5 +43,7 @@ has address_family => (
         return $max{$version};
     }
 }
+
+sub bits { $_[0]->version() == 6 ? 128 : 32 }
 
 1;

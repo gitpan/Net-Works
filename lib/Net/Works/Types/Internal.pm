@@ -1,6 +1,6 @@
 package Net::Works::Types::Internal;
 {
-  $Net::Works::Types::Internal::VERSION = '0.02';
+  $Net::Works::Types::Internal::VERSION = '0.03';
 }
 BEGIN {
   $Net::Works::Types::Internal::AUTHORITY = 'cpan:DROLSKY';

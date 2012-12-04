@@ -1,6 +1,6 @@
 package Net::Works::Address;
 {
-  $Net::Works::Address::VERSION = '0.02';
+  $Net::Works::Address::VERSION = '0.03';
 }
 BEGIN {
   $Net::Works::Address::AUTHORITY = 'cpan:DROLSKY';
@@ -151,7 +151,6 @@ sub as_bit_string {
 }
 
 sub mask_length { $_[0]->bits() }
-sub bits { $_[0]->version() == 6 ? 128 : 32 }
 
 sub next_ip {
     my $self = shift;
@@ -208,7 +207,7 @@ Net::Works::Address - An object representing a single IP (4 or 6) address
 
 =head1 VERSION
 
-version 0.02
+version 0.03
 
 =head1 SYNOPSIS
 
