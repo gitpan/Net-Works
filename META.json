@@ -40,7 +40,7 @@
             "MooseX::Types::Moose" : "0",
             "NetAddr::IP::Util" : "0",
             "Scalar::Util" : "0",
-            "Socket" : "0",
+            "Socket" : "1.99",
             "integer" : "0",
             "namespace::autoclean" : "0",
             "overload" : "0",
@@ -68,7 +68,7 @@
          "web" : "https://github.com/maxmind/Net-Works"
       }
    },
-   "version" : "0.05",
+   "version" : "0.06",
    "x_authority" : "cpan:DROLSKY"
 }
 

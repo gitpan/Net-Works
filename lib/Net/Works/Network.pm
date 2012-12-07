@@ -1,6 +1,6 @@
 package Net::Works::Network;
 {
-  $Net::Works::Network::VERSION = '0.05';
+  $Net::Works::Network::VERSION = '0.06';
 }
 BEGIN {
   $Net::Works::Network::AUTHORITY = 'cpan:DROLSKY';
@@ -17,7 +17,7 @@ use Net::Works::Address;
 use Net::Works::Types qw( Int IPInt Str );
 use Net::Works::Util qw( _integer_address_to_string _string_address_to_integer );
 use NetAddr::IP::Util qw( bcd2bin bin2bcd );
-use Socket qw( inet_ntop inet_pton AF_INET AF_INET6 );
+use Socket 1.99 qw( inet_ntop inet_pton AF_INET AF_INET6 );
 
 use integer;
 
@@ -367,7 +367,7 @@ Net::Works::Network - An object representing a single IP address (4 or 6) subnet
 
 =head1 VERSION
 
-version 0.05
+version 0.06
 
 =head1 SYNOPSIS
 

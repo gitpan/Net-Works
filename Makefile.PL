@@ -35,7 +35,7 @@ my %WriteMakefileArgs = (
     "MooseX::Types::Moose" => 0,
     "NetAddr::IP::Util" => 0,
     "Scalar::Util" => 0,
-    "Socket" => 0,
+    "Socket" => "1.99",
     "integer" => 0,
     "namespace::autoclean" => 0,
     "overload" => 0,
@@ -43,7 +43,7 @@ my %WriteMakefileArgs = (
     "strict" => 0,
     "warnings" => 0
   },
-  "VERSION" => "0.05",
+  "VERSION" => "0.06",
   "test" => {
     "TESTS" => "t/*.t"
   }

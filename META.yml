@@ -29,7 +29,7 @@ requires:
   MooseX::Types::Moose: 0
   NetAddr::IP::Util: 0
   Scalar::Util: 0
-  Socket: 0
+  Socket: 1.99
   integer: 0
   namespace::autoclean: 0
   overload: 0
@@ -39,5 +39,5 @@ requires:
 resources:
   bugtracker: http://rt.cpan.org/NoAuth/Bugs.html?Dist=Net-Works
   repository: git://github.com/maxmind/Net-Works.git
-version: 0.05
+version: 0.06
 x_authority: cpan:DROLSKY

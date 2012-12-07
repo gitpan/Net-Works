@@ -1,6 +1,6 @@
 package Net::Works::Address;
 {
-  $Net::Works::Address::VERSION = '0.05';
+  $Net::Works::Address::VERSION = '0.06';
 }
 BEGIN {
   $Net::Works::Address::AUTHORITY = 'cpan:DROLSKY';
@@ -16,7 +16,7 @@ use NetAddr::IP::Util qw( bin2bcd bcd2bin ipv6_n2x );
 use Net::Works::Types qw( IPInt PackedBinary Str );
 use Net::Works::Util qw( _integer_address_to_binary _string_address_to_integer );
 use Scalar::Util qw( blessed );
-use Socket qw( AF_INET AF_INET6 inet_pton inet_ntop );
+use Socket 1.99 qw( AF_INET AF_INET6 inet_pton inet_ntop );
 
 use integer;
 
@@ -201,7 +201,7 @@ Net::Works::Address - An object representing a single IP (4 or 6) address
 
 =head1 VERSION
 
-version 0.05
+version 0.06
 
 =head1 SYNOPSIS
 
