@@ -2,7 +2,8 @@
    "abstract" : "Sane APIs for IP addresses and networks",
    "author" : [
       "Dave Rolsky <autarch@urth.org>",
-      "Olaf Alders <olaf@wundercounter.com>"
+      "Olaf Alders <olaf@wundercounter.com>",
+      "Greg Oschwald <oschwald@cpan.org>"
    ],
    "dynamic_config" : 0,
    "generated_by" : "Dist::Zilla version 4.300028, CPAN::Meta::Converter version 2.120921",
@@ -29,8 +30,9 @@
          "requires" : {
             "Carp" : "0",
             "Data::Validate::IP" : "0",
+            "Exporter" : "0",
             "List::AllUtils" : "0",
-            "Math::BigInt" : "0",
+            "Math::Int128" : "0",
             "Moose" : "0",
             "Moose::Role" : "0",
             "MooseX::Types" : "0",
@@ -50,8 +52,7 @@
       "test" : {
          "requires" : {
             "Test::Fatal" : "0",
-            "Test::More" : "0.88",
-            "bigint" : "0"
+            "Test::More" : "0.88"
          }
       }
    },
@@ -67,7 +68,7 @@
          "web" : "https://github.com/maxmind/Net-Works"
       }
    },
-   "version" : "0.04",
+   "version" : "0.05",
    "x_authority" : "cpan:DROLSKY"
 }
 

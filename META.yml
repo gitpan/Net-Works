@@ -3,10 +3,10 @@ abstract: 'Sane APIs for IP addresses and networks'
 author:
   - 'Dave Rolsky <autarch@urth.org>'
   - 'Olaf Alders <olaf@wundercounter.com>'
+  - 'Greg Oschwald <oschwald@cpan.org>'
 build_requires:
   Test::Fatal: 0
   Test::More: 0.88
-  bigint: 0
 configure_requires:
   ExtUtils::MakeMaker: 6.30
 dynamic_config: 0
@@ -19,8 +19,9 @@ name: Net-Works
 requires:
   Carp: 0
   Data::Validate::IP: 0
+  Exporter: 0
   List::AllUtils: 0
-  Math::BigInt: 0
+  Math::Int128: 0
   Moose: 0
   Moose::Role: 0
   MooseX::Types: 0
@@ -38,5 +39,5 @@ requires:
 resources:
   bugtracker: http://rt.cpan.org/NoAuth/Bugs.html?Dist=Net-Works
   repository: git://github.com/maxmind/Net-Works.git
-version: 0.04
+version: 0.05
 x_authority: cpan:DROLSKY

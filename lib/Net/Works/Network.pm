@@ -1,6 +1,6 @@
 package Net::Works::Network;
 {
-  $Net::Works::Network::VERSION = '0.04';
+  $Net::Works::Network::VERSION = '0.05';
 }
 BEGIN {
   $Net::Works::Network::AUTHORITY = 'cpan:DROLSKY';
@@ -12,9 +12,10 @@ use namespace::autoclean;
 
 use Data::Validate::IP qw( is_ipv4 is_ipv6 );
 use List::AllUtils qw( any );
-use Math::BigInt try => 'GMP,Pari,FastCalc';
+use Math::Int128 qw(uint128);
 use Net::Works::Address;
 use Net::Works::Types qw( Int IPInt Str );
+use Net::Works::Util qw( _integer_address_to_string _string_address_to_integer );
 use NetAddr::IP::Util qw( bcd2bin bin2bcd );
 use Socket qw( inet_ntop inet_pton AF_INET AF_INET6 );
 
@@ -47,16 +48,17 @@ has mask_length => (
 );
 
 has _address_string => (
-    is  => 'ro',
-    isa => Str,
+    is       => 'ro',
+    isa      => Str,
+    init_arg => undef,
+    lazy     => 1,
+    builder  => '_build_address_string'
 );
 
 has _address_integer => (
     is       => 'ro',
     isa      => IPInt,
-    init_arg => undef,
-    lazy     => 1,
-    builder  => '_build_address_integer'
+    required => 1,
 );
 
 has _subnet_integer => (
@@ -67,41 +69,50 @@ has _subnet_integer => (
     builder  => '_build_subnet_integer',
 );
 
-override BUILDARGS => sub {
-    my $self = shift;
+sub new_from_string {
+    my $class = shift;
+    my %p     = @_;
 
-    my $p = super();
+    my ( $address, $masklen ) = split '/', $p{string};
 
-    my ( $address, $masklen ) = split '/', $p->{subnet};
-
-    my $version = $p->{version} ? $p->{version} : _is_ipv6($address) ? 6 : 4;
+    my $version = $p{version} ? $p{version} : _is_ipv6($address) ? 6 : 4;
 
     if ( $version == 6 && is_ipv4($address) ) {
         $masklen += 96;
         $address = '::' . $address;
     }
 
-    return {
-        _address_string => $address,
-        mask_length     => $masklen,
-        version         => $version,
-    };
-};
+    return $class->new(
+        _address_integer => _string_address_to_integer( $address, $version ),
+        mask_length      => $masklen,
+        version          => $version,
+    );
+}
+
+sub new_from_integer {
+    my $class = shift;
+    my %p     = @_;
+
+    my $integer = delete $p{integer};
+    my $version = delete $p{version};
+
+    $version ||= ref $integer ? 6 : 4;
+
+    return $class->new(
+        _address_integer => $integer,
+        version          => $version,
+        %p,
+    );
+}
+
+sub _build_address_string {
+    _integer_address_to_string( $_[0]->_first_as_integer );
+}
 
 # Data::Validate::IP does not think '::' is a valid IPv6 address -
 # https://rt.cpan.org/Ticket/Display.html?id=81700
 sub _is_ipv6 {
-    return $_[0] eq '::' || is_ipv6($_[0]);
-}
-
-sub _build_address_integer {
-    my $self = shift;
-
-    my $packed = inet_pton( $self->address_family(), $self->_address_string() );
-
-    return $self->version() == 4
-        ? unpack( N => $packed )
-        : Math::BigInt->new( bin2bcd($packed) );
+    return $_[0] eq '::' || is_ipv6( $_[0] );
 }
 
 sub _build_subnet_integer {
@@ -162,7 +173,7 @@ sub as_string {
 sub _build_first {
     my $self = shift;
 
-    my $id = $self->_address_integer() & $self->_subnet_integer();
+    my $id = $self->_first_as_integer;
 
     return Net::Works::Address->new_from_integer(
         integer => $id,
@@ -170,16 +181,21 @@ sub _build_first {
     );
 }
 
+sub _first_as_integer { $_[0]->_address_integer() & $_[0]->_subnet_integer() }
+
 sub _build_last {
     my $self = shift;
 
-    my $broadcast
-        = $self->_address_integer() | ( $self->_max() & ~$self->_subnet_integer() );
+    my $broadcast = $self->_last_as_integer;
 
     return Net::Works::Address->new_from_integer(
         integer => $broadcast,
         version => $self->version(),
     );
+}
+
+sub _last_as_integer {
+    $_[0]->_address_integer() | ( $_[0]->_max() & ~$_[0]->_subnet_integer() );
 }
 
 {
@@ -207,14 +223,22 @@ sub _build_last {
         4 => [
             map { [ $_->first()->as_integer(), $_->last()->as_integer() ] }
                 sort { $a->first <=> $b->first }
-                map { Net::Works::Network->new( subnet => $_, version => 4 ) }
-                @reserved_4,
+                map {
+                Net::Works::Network->new_from_string(
+                    string  => $_,
+                    version => 4
+                    )
+                } @reserved_4,
         ],
         6 => [
             map { [ $_->first()->as_integer(), $_->last()->as_integer() ] }
                 sort { $a->first <=> $b->first }
-                map { Net::Works::Network->new( subnet => $_, version => 6 ) }
-                @reserved_6,
+                map {
+                Net::Works::Network->new_from_string(
+                    string  => $_,
+                    version => 6
+                    )
+                } @reserved_6,
         ],
     );
 
@@ -294,7 +318,7 @@ sub _split_one_range {
 
         push @subnets, $max_network;
 
-        $first = $max_network->last()->next_ip()->as_integer();
+        $first = $max_network->_last_as_integer + 1;
     }
 
     return @subnets;
@@ -308,7 +332,7 @@ sub _max_subnet {
     my $masklen = $version == 6 ? 128 : 32;
 
     my $v = $ip;
-    my $reverse_mask = $version == 6 ? Math::BigInt->new(1) : 1;
+    my $reverse_mask = $version == 6 ? uint128(1) : 1;
 
     while (( $v & 1 ) == 0
         && $masklen > 0
@@ -320,14 +344,10 @@ sub _max_subnet {
         $reverse_mask = ( $reverse_mask << 1 ) | 1;
     }
 
-    my $address = inet_ntop(
-        ( $version == 6 ? AF_INET6 : AF_INET ),
-        ( $version == 6 ? bcd2bin($ip) : pack( N => $ip ) )
-    );
-
-    return Net::Works::Network->new(
-        subnet  => $address . '/' . $masklen,
-        version => $version,
+    return Net::Works::Network->new_from_integer(
+        integer     => $ip,
+        mask_length => $masklen,
+        version     => $version,
     );
 }
 
@@ -347,11 +367,11 @@ Net::Works::Network - An object representing a single IP address (4 or 6) subnet
 
 =head1 VERSION
 
-version 0.04
+version 0.05
 
 =head1 SYNOPSIS
 
-  my $network = Net::Works::Network->new( subnet => '1.0.0.0/24' );
+  my $network = Net::Works::Network->new_from_string( string => '1.0.0.0/24' );
   print $network->as_string();          # 1.0.0.0/24
   print $network->mask_length();        # 24
   print $network->bits();               # 32
@@ -366,11 +386,11 @@ version 0.04
   my $iterator = $network->iterator();
   while ( my $ip = $iterator->() ) { ... }
 
-  my $network = Net::Works::Network->new( subnet => '1.0.0.4/32' );
+  my $network = Net::Works::Network->new_from_string( string => '1.0.0.4/32' );
   print $network->max_mask_length(); # 30
 
   # All methods work with IPv4 and IPv6 subnets
-  my $network = Net::Works::Network->new( subnet => 'a800:f000::/20' );
+  my $network = Net::Works::Network->new_from_string( string => 'a800:f000::/20' );
 
   my @subnets = Net::Works::Network->range_as_subnets( '1.1.1.1', '1.1.1.32' );
   print $_->as_string, "\n" for @subnets;
@@ -397,10 +417,10 @@ change in the future.
 
 This class provides the following methods:
 
-=head2 Net::Works::Network->new( ... )
+=head2 Net::Works::Network->new_from_string( ... )
 
-This method takes a C<subnet> parameter and an optional C<version>
-parameter. The C<subnet> parameter should be a string representation of an IP
+This method takes a C<string> parameter and an optional C<version>
+parameter. The C<string> parameter should be a string representation of an IP
 address subnet.
 
 The C<version> parameter should be either C<4> or C<6>, but you don't really
@@ -408,10 +428,17 @@ need this unless you're trying to force a dotted quad to be interpreted as an
 IPv6 network or to a force an IPv6 address colon-separated hex number to be
 interpreted as an IPv4 network.
 
+=head2 Net::Works::Network->new_from_integer( ... )
+
+This method takes an C<integer> parameter and an optional C<version>
+parameter. The C<integer> parameter should be an integer representation of an
+IP within the subnet. The C<version> parameter should be either C<4> or C<6>.
+
 =head2 $network->as_string()
 
 Returns a string representation of the network like "1.0.0.0/24" or
-"a800:f000::/105".
+"a800:f000::/105". The IP address in the string is the first address
+within the subnet.
 
 =head2 $network->version()
 
@@ -419,7 +446,7 @@ Returns a 4 or 6 to indicate whether this is an IPv4 or IPv6 network.
 
 =head2 $network->mask_length()
 
-Returns the numeric network as passed to the constructor.
+Returns the length of the netmask as an integer.
 
 =head2 $network->bits()
 
@@ -472,6 +499,10 @@ Dave Rolsky <autarch@urth.org>
 =item *
 
 Olaf Alders <olaf@wundercounter.com>
+
+=item *
+
+Greg Oschwald <oschwald@cpan.org>
 
 =back
 

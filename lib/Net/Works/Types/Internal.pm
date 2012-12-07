@@ -1,6 +1,6 @@
 package Net::Works::Types::Internal;
 {
-  $Net::Works::Types::Internal::VERSION = '0.04';
+  $Net::Works::Types::Internal::VERSION = '0.05';
 }
 BEGIN {
   $Net::Works::Types::Internal::AUTHORITY = 'cpan:DROLSKY';
@@ -13,21 +13,23 @@ use namespace::autoclean;
 use MooseX::Types -declare => [
     qw(
         BigInt
+        UInt128
         PackedBinary
         IPInt
         IPVersion
         )
 ];
 
-use MooseX::Types::Moose qw( Int Value );
+use MooseX::Types::Moose qw( Int Str );
 
 class_type BigInt, { class => 'Math::BigInt' };
+class_type UInt128, { class => 'Math::UInt128' };
 
 subtype PackedBinary,
-    as Value;
+    as Str;
 
 subtype IPInt,
-    as Int|BigInt;
+    as Int|UInt128;
 
 subtype IPVersion,
     as Int;

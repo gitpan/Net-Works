@@ -1,6 +1,6 @@
 package Net::Works::Address;
 {
-  $Net::Works::Address::VERSION = '0.04';
+  $Net::Works::Address::VERSION = '0.05';
 }
 BEGIN {
   $Net::Works::Address::AUTHORITY = 'cpan:DROLSKY';
@@ -11,9 +11,10 @@ use warnings;
 
 use Carp qw( confess );
 use Data::Validate::IP qw( is_ipv4 );
-use Math::BigInt try => 'GMP,Pari,FastCalc';
+use Math::Int128 qw( uint128 uint128_to_hex uint128_to_number );
 use NetAddr::IP::Util qw( bin2bcd bcd2bin ipv6_n2x );
 use Net::Works::Types qw( IPInt PackedBinary Str );
+use Net::Works::Util qw( _integer_address_to_binary _string_address_to_integer );
 use Scalar::Util qw( blessed );
 use Socket qw( AF_INET AF_INET6 inet_pton inet_ntop );
 
@@ -34,18 +35,18 @@ use Moose;
 with 'Net::Works::Role::IP';
 
 has _binary => (
-    is       => 'ro',
-    reader   => 'as_binary',
-    isa      => PackedBinary,
-    required => 1,
+    is      => 'ro',
+    reader  => 'as_binary',
+    isa     => PackedBinary,
+    lazy    => 1,
+    builder => '_build_binary',
 );
 
 has _integer => (
-    is      => 'ro',
-    reader  => 'as_integer',
-    isa     => IPInt,
-    lazy    => 1,
-    builder => '_build_integer',
+    is       => 'ro',
+    reader   => 'as_integer',
+    isa      => IPInt,
+    required => 1,
 
 );
 
@@ -72,11 +73,9 @@ sub new_from_string {
         $version ||= 6;
     }
 
-    my $family = $version == 6 ? AF_INET6 : AF_INET;
-
     return $class->new(
-        _binary => inet_pton( $family, $str ),
-        version   => $version,
+        _integer => _string_address_to_integer( $str, $version ),
+        version  => $version,
         %p,
     );
 }
@@ -90,14 +89,16 @@ sub new_from_integer {
     $version ||= ref $int ? 6 : 4;
 
     if ( $version == 4 && ref($int) ) {
-        $int = $int->numify;
+        $int = uint128_to_number($int);
     }
 
-    my $packed = $version == 4 ? pack( N => $int ) : bcd2bin($int);
+    if ( $version == 6 && !ref($int) ) {
+        $int = uint128($int);
+    }
 
     return $class->new(
-        _binary => $packed,
-        version => $version,
+        _integer => $int,
+        version  => $version,
         %p,
     );
 }
@@ -113,13 +114,7 @@ sub _overloaded_as_string {
     return $_[0]->as_string();
 }
 
-sub _build_integer {
-    my $self = shift;
-
-    return $self->version == 4
-        ? unpack( N => $self->as_binary() )
-        : Math::BigInt->new( bin2bcd( $self->as_binary() ) );
-}
+sub _build_binary { _integer_address_to_binary( $_[0]->as_integer() ) }
 
 sub as_ipv4_string {
     my $self = shift;
@@ -140,10 +135,9 @@ sub as_bit_string {
     my $self = shift;
 
     if ( $self->version == 6 ) {
-        my $bin = $self->as_integer()->as_bin();
-
-        $bin =~ s/^0b//;
-        return sprintf( '%0128s', $bin );
+        my $hex = uint128_to_hex( $self->as_integer() );
+        my @ha = $hex =~ /.{8}/g;
+        return join '', map { sprintf( '%032b', hex($_) ) } @ha;
     }
     else {
         return sprintf( '%032b', $self->as_integer() );
@@ -207,7 +201,7 @@ Net::Works::Address - An object representing a single IP (4 or 6) address
 
 =head1 VERSION
 
-version 0.04
+version 0.05
 
 =head1 SYNOPSIS
 
@@ -341,6 +335,10 @@ Dave Rolsky <autarch@urth.org>
 =item *
 
 Olaf Alders <olaf@wundercounter.com>
+
+=item *
+
+Greg Oschwald <oschwald@cpan.org>
 
 =back
 

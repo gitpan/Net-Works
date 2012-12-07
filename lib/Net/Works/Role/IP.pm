@@ -1,6 +1,6 @@
 package Net::Works::Role::IP;
 {
-  $Net::Works::Role::IP::VERSION = '0.04';
+  $Net::Works::Role::IP::VERSION = '0.05';
 }
 BEGIN {
   $Net::Works::Role::IP::AUTHORITY = 'cpan:DROLSKY';
@@ -10,11 +10,13 @@ use strict;
 use warnings;
 use namespace::autoclean;
 
-use Math::BigInt try => 'GMP,Pari,FastCalc';
+use Math::Int128 qw( uint128 );
 use Net::Works::Types qw( Int IPVersion );
 use Socket qw( AF_INET AF_INET6 );
 
 use Moose::Role;
+
+use integer;
 
 has version => (
     is       => 'ro',
@@ -33,7 +35,7 @@ has address_family => (
 {
     my %max = (
         4 => 0xFFFFFFFF,
-        6 => Math::BigInt->from_hex('0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'),
+        6 => uint128(0) - 1,
     );
 
     sub _max {

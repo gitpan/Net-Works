@@ -4,6 +4,7 @@ use warnings;
 use Test::More 0.88;
 
 use List::AllUtils qw( each_array );
+use Math::Int128 qw(uint128);
 use Net::Works::Network;
 
 {
@@ -93,7 +94,7 @@ use Net::Works::Network;
     my $end   = '0.0.0.255';
 
     my @expect = (
-        map { Net::Works::Network->new( subnet => $_ ) }
+        map { Net::Works::Network->new_from_string( string => $_ ) }
             qw(
             0.0.0.1/32
             0.0.0.2/31
@@ -114,7 +115,7 @@ use Net::Works::Network;
     my $end   = '12.0.0.0';
 
     my @expect = (
-        map { Net::Works::Network->new( subnet => $_ ) }
+        map { Net::Works::Network->new_from_string( string => $_ ) }
             qw(
             11.0.0.0/8
             12.0.0.0/32
@@ -129,7 +130,7 @@ use Net::Works::Network;
     my $end   = '19.255.255.255';
 
     my @expect = (
-        map { Net::Works::Network->new( subnet => $_ ) }
+        map { Net::Works::Network->new_from_string( string => $_ ) }
             qw(
             0.0.0.1/32
             0.0.0.2/31
@@ -173,10 +174,9 @@ use Net::Works::Network;
     my $end   = 'ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff';
 
     my @subnets = do {
-        use bigint;
         map {
             Net::Works::Address->new_from_integer(
-                integer => 2**$_,
+                integer => uint128(2)**$_,
                 version => 6
                 )->as_string()
                 . '/'
@@ -185,7 +185,7 @@ use Net::Works::Network;
     };
 
     my @expect = (
-        map { Net::Works::Network->new( subnet => $_, version => 6 ) } @subnets,
+        map { Net::Works::Network->new_from_string( string => $_, version => 6 ) } @subnets,
         qw(
             ::8.0.0.0/103
             ::11.0.0.0/104

@@ -10,11 +10,10 @@ use ExtUtils::MakeMaker 6.30;
 
 my %WriteMakefileArgs = (
   "ABSTRACT" => "Sane APIs for IP addresses and networks",
-  "AUTHOR" => "Dave Rolsky <autarch\@urth.org>, Olaf Alders <olaf\@wundercounter.com>",
+  "AUTHOR" => "Dave Rolsky <autarch\@urth.org>, Olaf Alders <olaf\@wundercounter.com>, Greg Oschwald <oschwald\@cpan.org>",
   "BUILD_REQUIRES" => {
     "Test::Fatal" => 0,
-    "Test::More" => "0.88",
-    "bigint" => 0
+    "Test::More" => "0.88"
   },
   "CONFIGURE_REQUIRES" => {
     "ExtUtils::MakeMaker" => "6.30"
@@ -26,8 +25,9 @@ my %WriteMakefileArgs = (
   "PREREQ_PM" => {
     "Carp" => 0,
     "Data::Validate::IP" => 0,
+    "Exporter" => 0,
     "List::AllUtils" => 0,
-    "Math::BigInt" => 0,
+    "Math::Int128" => 0,
     "Moose" => 0,
     "Moose::Role" => 0,
     "MooseX::Types" => 0,
@@ -43,7 +43,7 @@ my %WriteMakefileArgs = (
     "strict" => 0,
     "warnings" => 0
   },
-  "VERSION" => "0.04",
+  "VERSION" => "0.05",
   "test" => {
     "TESTS" => "t/*.t"
   }
