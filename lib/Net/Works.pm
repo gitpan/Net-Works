@@ -1,6 +1,6 @@
 package Net::Works;
 {
-  $Net::Works::VERSION = '0.06';
+  $Net::Works::VERSION = '0.07';
 }
 BEGIN {
   $Net::Works::AUTHORITY = 'cpan:DROLSKY';
@@ -28,26 +28,19 @@ Net::Works - Sane APIs for IP addresses and networks
 
 =head1 VERSION
 
-version 0.06
+version 0.07
 
 =head1 DESCRIPTION
 
 The L<NetAddr::IP> module is very complete, correct, and useful. However, its
-API design is a bit crufty. This distro provides wrappers around
-L<NetAddr::IP> that aim to address the biggest problems with that module's
-API, as well as adding some additional features.
+API design is a bit crufty. This distro provides an alternative API that aims
+to address the biggest problems with that module's API, as well as adding some
+additional features.
 
 This distro contains two modules, L<Net::Works::Address> and
 L<Net::Works::Network>.
 
 B<NOTE: This distro's APIs are still in flux. Use at your own risk.>
-
-=head1 BIG INTEGERS
-
-If you're using this module to work with IPv6 addresses, then you'll end up
-creating big integers at some point. We strongly recommend that you install
-L<Math::BigInt::GMP> or L<Math::BigInt::Pari>. The default pure Perl
-implementation of big integers can be very, very slow.
 
 =head1 Net::Works VERSUS NetAddr::IP
 
@@ -91,8 +84,8 @@ the range.
 
 =item * Does less
 
-This distro does not wrap every method provided by L<NetAddr::IP>. Patches to
-add more wrappers are welcome, however.
+This distro does not support every method provided by L<NetAddr::IP>. Patches
+to add more features are welcome, however.
 
 =back
 

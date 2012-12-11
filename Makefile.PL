@@ -24,16 +24,14 @@ my %WriteMakefileArgs = (
   "NAME" => "Net::Works",
   "PREREQ_PM" => {
     "Carp" => 0,
-    "Data::Validate::IP" => 0,
     "Exporter" => 0,
     "List::AllUtils" => 0,
-    "Math::Int128" => 0,
+    "Math::Int128" => "0.06",
     "Moose" => 0,
     "Moose::Role" => 0,
     "MooseX::Types" => 0,
     "MooseX::Types::Combine" => 0,
     "MooseX::Types::Moose" => 0,
-    "NetAddr::IP::Util" => 0,
     "Scalar::Util" => 0,
     "Socket" => "1.99",
     "integer" => 0,
@@ -43,7 +41,7 @@ my %WriteMakefileArgs = (
     "strict" => 0,
     "warnings" => 0
   },
-  "VERSION" => "0.06",
+  "VERSION" => "0.07",
   "test" => {
     "TESTS" => "t/*.t"
   }

@@ -1,6 +1,6 @@
 package Net::Works::Types::Internal;
 {
-  $Net::Works::Types::Internal::VERSION = '0.06';
+  $Net::Works::Types::Internal::VERSION = '0.07';
 }
 BEGIN {
   $Net::Works::Types::Internal::AUTHORITY = 'cpan:DROLSKY';
@@ -12,30 +12,32 @@ use namespace::autoclean;
 
 use MooseX::Types -declare => [
     qw(
-        BigInt
-        UInt128
-        PackedBinary
         IPInt
         IPVersion
+        MaskLength
+        PackedBinary
+        UInt128
         )
 ];
 
 use MooseX::Types::Moose qw( Int Str );
 
-class_type BigInt, { class => 'Math::BigInt' };
 class_type UInt128, { class => 'Math::UInt128' };
 
 subtype PackedBinary,
     as Str;
 
 subtype IPInt,
-    as Int|UInt128;
+    as Int | UInt128,
+    where { $_ >= 0 },
+    message { ( defined $_ ? $_ : 'undef' ) . ' is not a valid IP integer' };
 
 subtype IPVersion,
     as Int;
 
-coerce IPVersion,
-    from BigInt,
-    via { $_->numify() };
+subtype MaskLength,
+    as Int,
+    where { $_ >= 0 && $_ <= 128 },
+    message { ( defined $_ ? $_ : 'undef' ) . ' is not a valid IP mask length' };
 
 1;

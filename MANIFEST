@@ -18,6 +18,7 @@ lib/Net/Works/Util.pm
 t/Address.t
 t/Network-splitting.t
 t/Network.t
+t/bad-data.t
 t/release-cpan-changes.t
 t/release-eol.t
 t/release-no-tabs.t

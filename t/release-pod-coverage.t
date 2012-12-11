@@ -34,6 +34,7 @@ for my $module ( sort @modules ) {
         $module,
         {
             coverage_class => 'Pod::Coverage::Moose',
+            trustme        => [qr/^BUILD$/],
         },
         "Pod coverage for $module"
     );

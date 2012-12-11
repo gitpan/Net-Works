@@ -1,6 +1,6 @@
 package Net::Works::Network;
 {
-  $Net::Works::Network::VERSION = '0.06';
+  $Net::Works::Network::VERSION = '0.07';
 }
 BEGIN {
   $Net::Works::Network::AUTHORITY = 'cpan:DROLSKY';
@@ -10,13 +10,12 @@ use strict;
 use warnings;
 use namespace::autoclean;
 
-use Data::Validate::IP qw( is_ipv4 is_ipv6 );
 use List::AllUtils qw( any );
-use Math::Int128 qw(uint128);
+use Math::Int128 qw( uint128 );
 use Net::Works::Address;
-use Net::Works::Types qw( Int IPInt Str );
-use Net::Works::Util qw( _integer_address_to_string _string_address_to_integer );
-use NetAddr::IP::Util qw( bcd2bin bin2bcd );
+use Net::Works::Types qw( Int IPInt MaskLength Str );
+use Net::Works::Util
+    qw( _integer_address_to_string _string_address_to_integer );
 use Socket 1.99 qw( inet_ntop inet_pton AF_INET AF_INET6 );
 
 use integer;
@@ -43,7 +42,7 @@ has last => (
 
 has mask_length => (
     is       => 'ro',
-    isa      => Int,
+    isa      => MaskLength,
     required => 1,
 );
 
@@ -55,12 +54,6 @@ has _address_string => (
     builder  => '_build_address_string'
 );
 
-has _address_integer => (
-    is       => 'ro',
-    isa      => IPInt,
-    required => 1,
-);
-
 has _subnet_integer => (
     is       => 'ro',
     isa      => IPInt,
@@ -69,23 +62,51 @@ has _subnet_integer => (
     builder  => '_build_subnet_integer',
 );
 
+sub BUILD {
+    my $self = shift;
+
+    $self->_validate_ip_integer();
+
+    my $max = $self->version() == 4 ? 32 : 128;
+    if ( $self->mask_length() < 0 || $self->mask_length() > $max ) {
+        die $self->mask_length() . ' is not a valid IP mask length';
+    }
+
+    return;
+}
+
 sub new_from_string {
     my $class = shift;
     my %p     = @_;
 
-    my ( $address, $masklen ) = split '/', $p{string};
+    my $integer;
+    my $version;
+    my $masklen;
 
-    my $version = $p{version} ? $p{version} : _is_ipv6($address) ? 6 : 4;
+    if ( defined $p{string} ) {
+        ( my $address, $masklen ) = split '/', $p{string};
 
-    if ( $version == 6 && is_ipv4($address) ) {
-        $masklen += 96;
-        $address = '::' . $address;
+        $version
+            = $p{version} ? $p{version} : inet_pton( AF_INET6, $address ) ? 6 : 4;
+
+        if ( $version == 6 && inet_pton( AF_INET, $address ) ) {
+            $masklen += 96;
+            $address = '::' . $address;
+        }
+
+        $integer = _string_address_to_integer( $address, $version );
+
+        die "$p{string} is not a valid IP network"
+            unless defined $integer;
+    }
+    else {
+        die "undef is not a valid IP network";
     }
 
     return $class->new(
-        _address_integer => _string_address_to_integer( $address, $version ),
-        mask_length      => $masklen,
-        version          => $version,
+        _integer    => $integer,
+        mask_length => $masklen,
+        version     => $version,
     );
 }
 
@@ -99,20 +120,14 @@ sub new_from_integer {
     $version ||= ref $integer ? 6 : 4;
 
     return $class->new(
-        _address_integer => $integer,
-        version          => $version,
+        _integer => $integer,
+        version  => $version,
         %p,
     );
 }
 
 sub _build_address_string {
     _integer_address_to_string( $_[0]->_first_as_integer );
-}
-
-# Data::Validate::IP does not think '::' is a valid IPv6 address -
-# https://rt.cpan.org/Ticket/Display.html?id=81700
-sub _is_ipv6 {
-    return $_[0] eq '::' || is_ipv6( $_[0] );
 }
 
 sub _build_subnet_integer {
@@ -181,7 +196,7 @@ sub _build_first {
     );
 }
 
-sub _first_as_integer { $_[0]->_address_integer() & $_[0]->_subnet_integer() }
+sub _first_as_integer { $_[0]->_integer() & $_[0]->_subnet_integer() }
 
 sub _build_last {
     my $self = shift;
@@ -195,7 +210,7 @@ sub _build_last {
 }
 
 sub _last_as_integer {
-    $_[0]->_address_integer() | ( $_[0]->_max() & ~$_[0]->_subnet_integer() );
+    $_[0]->_integer() | ( $_[0]->_max() & ~$_[0]->_subnet_integer() );
 }
 
 {
@@ -367,7 +382,7 @@ Net::Works::Network - An object representing a single IP address (4 or 6) subnet
 
 =head1 VERSION
 
-version 0.06
+version 0.07
 
 =head1 SYNOPSIS
 
@@ -407,11 +422,8 @@ Objects of this class represent an IP address network. It can handle both IPv4
 and IPv6 subnets. It provides various methods for getting information about
 the subnet.
 
-For IPv6, it uses big integers (via Math::BigInt) to represent the numeric
-value of an address as needed.
-
-This module is currently a thin wrapper around NetAddr::IP but that could
-change in the future.
+For IPv6, it uses 128-bit integers (via Math::Int128) to represent the
+numeric value of an address as needed.
 
 =head1 METHODS
 

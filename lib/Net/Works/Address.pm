@@ -1,6 +1,6 @@
 package Net::Works::Address;
 {
-  $Net::Works::Address::VERSION = '0.06';
+  $Net::Works::Address::VERSION = '0.07';
 }
 BEGIN {
   $Net::Works::Address::AUTHORITY = 'cpan:DROLSKY';
@@ -10,11 +10,10 @@ use strict;
 use warnings;
 
 use Carp qw( confess );
-use Data::Validate::IP qw( is_ipv4 );
-use Math::Int128 qw( uint128 uint128_to_hex uint128_to_number );
-use NetAddr::IP::Util qw( bin2bcd bcd2bin ipv6_n2x );
-use Net::Works::Types qw( IPInt PackedBinary Str );
-use Net::Works::Util qw( _integer_address_to_binary _string_address_to_integer );
+use Math::Int128 0.06 qw( uint128 uint128_to_hex uint128_to_number );
+use Net::Works::Types qw( PackedBinary Str );
+use Net::Works::Util
+    qw( _integer_address_to_binary _string_address_to_integer _validate_ip_string );
 use Scalar::Util qw( blessed );
 use Socket 1.99 qw( AF_INET AF_INET6 inet_pton inet_ntop );
 
@@ -42,14 +41,6 @@ has _binary => (
     builder => '_build_binary',
 );
 
-has _integer => (
-    is       => 'ro',
-    reader   => 'as_integer',
-    isa      => IPInt,
-    required => 1,
-
-);
-
 has _string => (
     is      => 'ro',
     reader  => 'as_string',
@@ -58,6 +49,14 @@ has _string => (
     builder => '_build_string',
 );
 
+sub BUILD {
+    my $self = shift;
+
+    $self->_validate_ip_integer();
+
+    return;
+}
+
 sub new_from_string {
     my $class = shift;
     my %p     = @_;
@@ -65,12 +64,13 @@ sub new_from_string {
     my $str     = delete $p{string};
     my $version = delete $p{version};
 
-    if ( is_ipv4($str) ) {
+    if ( defined $str && inet_pton( AF_INET, $str ) ) {
         $version ||= 4;
         $str = '::' . $str if $version == 6;
     }
     else {
         $version ||= 6;
+        _validate_ip_string( $str, $version );
     }
 
     return $class->new(
@@ -92,10 +92,6 @@ sub new_from_integer {
         $int = uint128_to_number($int);
     }
 
-    if ( $version == 6 && !ref($int) ) {
-        $int = uint128($int);
-    }
-
     return $class->new(
         _integer => $int,
         version  => $version,
@@ -115,6 +111,8 @@ sub _overloaded_as_string {
 }
 
 sub _build_binary { _integer_address_to_binary( $_[0]->as_integer() ) }
+
+sub as_integer { $_[0]->_integer() }
 
 sub as_ipv4_string {
     my $self = shift;
@@ -201,7 +199,7 @@ Net::Works::Address - An object representing a single IP (4 or 6) address
 
 =head1 VERSION
 
-version 0.06
+version 0.07
 
 =head1 SYNOPSIS
 
@@ -232,11 +230,8 @@ and IPv6 addresses. It provides various methods for getting information about
 the address, and also overloads the objects so that addresses can be compared
 as integers.
 
-For IPv6, it uses big integers (via Math::BigInt) to represent the numeric
-value of an address.
-
-This module is currently a thin wrapper around NetAddr::IP but that could
-change in the future.
+For IPv6, it uses 128-bit integers (via Math::Int128) to represent the
+numeric value of an address.
 
 =head1 METHODS
 
@@ -270,7 +265,7 @@ inet_ntop, e.g., "1.2.3.4", "::1.2.3.4", or "ffff::a:1234".
 =head2 $ip->as_integer()
 
 Returns the address as an integer. For IPv6 addresses, this is returned as a
-L<Math::BigInt> object, regardless of the value.
+L<Math::Int128> object, regardless of the value.
 
 =head2 $ip->as_binary()
 

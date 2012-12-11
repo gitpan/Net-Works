@@ -1,6 +1,6 @@
 package Net::Works::Util;
 {
-  $Net::Works::Util::VERSION = '0.06';
+  $Net::Works::Util::VERSION = '0.07';
 }
 BEGIN {
   $Net::Works::Util::AUTHORITY = 'cpan:DROLSKY';
@@ -9,8 +9,7 @@ BEGIN {
 use strict;
 use warnings;
 
-use Math::Int128 qw( net_to_uint128 );
-use NetAddr::IP::Util qw( bcd2bin bin2bcd );
+use Math::Int128 qw( net_to_uint128 uint128_to_net );
 use Socket qw( AF_INET AF_INET6 inet_pton inet_ntop );
 use Scalar::Util qw( blessed );
 
@@ -21,13 +20,15 @@ our @EXPORT_OK = qw(
     _integer_address_to_binary
     _binary_address_to_string
     _integer_address_to_string
+    _validate_ip_string
 );
 
 sub _string_address_to_integer {
     my $string  = shift;
     my $version = shift;
 
-    my $binary = inet_pton( $version == 4 ? AF_INET : AF_INET6, $string );
+    my $binary = inet_pton( $version == 4 ? AF_INET : AF_INET6, $string )
+        or return;
 
     return $version == 4
         ? unpack( N => $binary )
@@ -37,10 +38,8 @@ sub _string_address_to_integer {
 sub _integer_address_to_binary {
     my $integer = shift;
 
-    # Note: there seems to be a bug in uint128_to_net that causes a byte
-    # to be flipped as of Dec. 6, 2012. Using bcd2bin instead.
     if ( ref $integer && blessed $integer) {
-        return bcd2bin($integer);
+        return uint128_to_net($integer);
     }
     else {
         return pack( N => $integer );
@@ -59,6 +58,21 @@ sub _integer_address_to_string {
     _binary_address_to_string( _integer_address_to_binary( $_[0] ) );
 }
 
+sub _validate_ip_string {
+    my $str     = shift;
+    my $version = shift;
+
+    my $str_val = defined $str ? $str : 'undef';
+    if ( $version == 4 ) {
+        die "$str_val is not a valid IPv4 address"
+            unless defined $str && defined inet_pton( AF_INET, $str );
+    }
+    else {
+        die "$str_val is not a valid IPv6 address"
+            unless defined $str && defined inet_pton( AF_INET6, $str );
+    }
+}
+
 1;
 
 # ABSTRACT: Utility subroutines for Net-Works
@@ -73,7 +87,7 @@ Net::Works::Util - Utility subroutines for Net-Works
 
 =head1 VERSION
 
-version 0.06
+version 0.07
 
 =head1 DESCRIPTION
 
