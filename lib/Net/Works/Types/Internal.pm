@@ -1,6 +1,6 @@
 package Net::Works::Types::Internal;
 {
-  $Net::Works::Types::Internal::VERSION = '0.07';
+  $Net::Works::Types::Internal::VERSION = '0.08';
 }
 BEGIN {
   $Net::Works::Types::Internal::AUTHORITY = 'cpan:DROLSKY';
@@ -30,6 +30,7 @@ subtype PackedBinary,
 subtype IPInt,
     as Int | UInt128,
     where { $_ >= 0 },
+    inline_as { $_[0]->parent()->_inline_check( $_[1] ) . " && ($_[1] >= 0)" },
     message { ( defined $_ ? $_ : 'undef' ) . ' is not a valid IP integer' };
 
 subtype IPVersion,
@@ -38,6 +39,12 @@ subtype IPVersion,
 subtype MaskLength,
     as Int,
     where { $_ >= 0 && $_ <= 128 },
-    message { ( defined $_ ? $_ : 'undef' ) . ' is not a valid IP mask length' };
+    inline_as {
+        $_[0]->parent()->_inline_check( $_[1] )
+            . " && ($_[1] >= 0 && $_[1] <= 128)";
+    },
+    message {
+        ( defined $_ ? $_ : 'undef' ) . ' is not a valid IP mask length';
+    };
 
 1;

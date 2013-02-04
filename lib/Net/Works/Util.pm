@@ -1,6 +1,6 @@
 package Net::Works::Util;
 {
-  $Net::Works::Util::VERSION = '0.07';
+  $Net::Works::Util::VERSION = '0.08';
 }
 BEGIN {
   $Net::Works::Util::AUTHORITY = 'cpan:DROLSKY';
@@ -87,7 +87,7 @@ Net::Works::Util - Utility subroutines for Net-Works
 
 =head1 VERSION
 
-version 0.07
+version 0.08
 
 =head1 DESCRIPTION
 
@@ -114,7 +114,7 @@ Greg Oschwald <oschwald@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2012 by MaxMind, Inc..
+This software is Copyright (c) 2013 by MaxMind, Inc..
 
 This is free software, licensed under:
 

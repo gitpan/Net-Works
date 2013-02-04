@@ -1,6 +1,6 @@
 package Net::Works::Address;
 {
-  $Net::Works::Address::VERSION = '0.07';
+  $Net::Works::Address::VERSION = '0.08';
 }
 BEGIN {
   $Net::Works::Address::AUTHORITY = 'cpan:DROLSKY';
@@ -199,11 +199,11 @@ Net::Works::Address - An object representing a single IP (4 or 6) address
 
 =head1 VERSION
 
-version 0.07
+version 0.08
 
 =head1 SYNOPSIS
 
-  my $ip = Net::Works::Address->new( address => '1.2.3.4' );
+  my $ip = Net::Works::Address->new_from_string( string => '1.2.3.4' );
   print $ip->as_string();     # 1.2.3.4
   print $ip->as_integer();    # 16909060
   print $ip->as_binary();     # 4-byte packed form of the address
@@ -218,7 +218,7 @@ version 0.07
 
   my @sorted = sort $next, $prev, $ip;
 
-  my $ip = Net::Works::Address->new( address => 'a900::1234' );
+  my $ip = Net::Works::Address->new_from_string( string => 'a900::1234' );
   print $ip->as_integer(); # 224639531287650782520743393187378238004
 
   my $ip = Net::Works::Address->new_from_integer( integer => 16909060 );
@@ -339,7 +339,7 @@ Greg Oschwald <oschwald@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2012 by MaxMind, Inc..
+This software is Copyright (c) 2013 by MaxMind, Inc..
 
 This is free software, licensed under:
 

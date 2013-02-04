@@ -1,6 +1,6 @@
 package Net::Works;
 {
-  $Net::Works::VERSION = '0.07';
+  $Net::Works::VERSION = '0.08';
 }
 BEGIN {
   $Net::Works::AUTHORITY = 'cpan:DROLSKY';
@@ -28,7 +28,7 @@ Net::Works - Sane APIs for IP addresses and networks
 
 =head1 VERSION
 
-version 0.07
+version 0.08
 
 =head1 DESCRIPTION
 
@@ -116,7 +116,7 @@ Greg Oschwald <oschwald@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2012 by MaxMind, Inc..
+This software is Copyright (c) 2013 by MaxMind, Inc..
 
 This is free software, licensed under:
 
