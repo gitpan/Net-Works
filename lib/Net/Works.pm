@@ -1,10 +1,12 @@
 package Net::Works;
 {
-  $Net::Works::VERSION = '0.08';
+  $Net::Works::VERSION = '0.09';
 }
 BEGIN {
   $Net::Works::AUTHORITY = 'cpan:DROLSKY';
 }
+
+use 5.010000;
 
 # This is a hack to let us test code that requires a specific Net::Works
 # version against the Net-Works git repo code, but without actually setting
@@ -28,7 +30,7 @@ Net::Works - Sane APIs for IP addresses and networks
 
 =head1 VERSION
 
-version 0.08
+version 0.09
 
 =head1 DESCRIPTION
 

@@ -43,6 +43,7 @@
             "namespace::autoclean" : "0",
             "overload" : "0",
             "parent" : "0",
+            "perl" : "5.010000",
             "strict" : "0",
             "warnings" : "0"
          }
@@ -66,7 +67,7 @@
          "web" : "https://github.com/maxmind/Net-Works"
       }
    },
-   "version" : "0.08",
+   "version" : "0.09",
    "x_authority" : "cpan:DROLSKY"
 }
 
