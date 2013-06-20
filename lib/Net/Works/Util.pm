@@ -1,6 +1,6 @@
 package Net::Works::Util;
 {
-  $Net::Works::Util::VERSION = '0.09';
+  $Net::Works::Util::VERSION = '0.10';
 }
 BEGIN {
   $Net::Works::Util::AUTHORITY = 'cpan:DROLSKY';
@@ -87,7 +87,7 @@ Net::Works::Util - Utility subroutines for Net-Works
 
 =head1 VERSION
 
-version 0.09
+version 0.10
 
 =head1 DESCRIPTION
 
@@ -104,20 +104,19 @@ Dave Rolsky <autarch@urth.org>
 
 =item *
 
-Olaf Alders <olaf@wundercounter.com>
+Greg Oschwald <oschwald@cpan.org>
 
 =item *
 
-Greg Oschwald <oschwald@cpan.org>
+Olaf Alders <oalders@wundercounter.com>
 
 =back
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2013 by MaxMind, Inc..
+This software is copyright (c) 2013 by MaxMind, Inc..
 
-This is free software, licensed under:
-
-  The Artistic License 2.0 (GPL Compatible)
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut

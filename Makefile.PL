@@ -10,17 +10,14 @@ use ExtUtils::MakeMaker 6.30;
 
 my %WriteMakefileArgs = (
   "ABSTRACT" => "Sane APIs for IP addresses and networks",
-  "AUTHOR" => "Dave Rolsky <autarch\@urth.org>, Olaf Alders <olaf\@wundercounter.com>, Greg Oschwald <oschwald\@cpan.org>",
-  "BUILD_REQUIRES" => {
-    "Test::Fatal" => 0,
-    "Test::More" => "0.88"
-  },
+  "AUTHOR" => "Dave Rolsky <autarch\@urth.org>, Greg Oschwald <oschwald\@cpan.org>, Olaf Alders <oalders\@wundercounter.com>",
+  "BUILD_REQUIRES" => {},
   "CONFIGURE_REQUIRES" => {
     "ExtUtils::MakeMaker" => "6.30"
   },
   "DISTNAME" => "Net-Works",
   "EXE_FILES" => [],
-  "LICENSE" => "artistic_2",
+  "LICENSE" => "perl",
   "NAME" => "Net::Works",
   "PREREQ_PM" => {
     "Carp" => 0,
@@ -41,12 +38,29 @@ my %WriteMakefileArgs = (
     "strict" => 0,
     "warnings" => 0
   },
-  "VERSION" => "0.09",
+  "TEST_REQUIRES" => {
+    "Test::Fatal" => 0,
+    "Test::More" => "0.88"
+  },
+  "VERSION" => "0.10",
   "test" => {
     "TESTS" => "t/*.t"
   }
 );
 
+
+unless ( eval { ExtUtils::MakeMaker->VERSION(6.63_03) } ) {
+  my $tr = delete $WriteMakefileArgs{TEST_REQUIRES};
+  my $br = $WriteMakefileArgs{BUILD_REQUIRES};
+  for my $mod ( keys %$tr ) {
+    if ( exists $br->{$mod} ) {
+      $br->{$mod} = $tr->{$mod} if $tr->{$mod} > $br->{$mod};
+    }
+    else {
+      $br->{$mod} = $tr->{$mod};
+    }
+  }
+}
 
 unless ( eval { ExtUtils::MakeMaker->VERSION(6.56) } ) {
   my $br = delete $WriteMakefileArgs{BUILD_REQUIRES};

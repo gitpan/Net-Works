@@ -1,6 +1,6 @@
 package Net::Works;
 {
-  $Net::Works::VERSION = '0.09';
+  $Net::Works::VERSION = '0.10';
 }
 BEGIN {
   $Net::Works::AUTHORITY = 'cpan:DROLSKY';
@@ -30,7 +30,7 @@ Net::Works - Sane APIs for IP addresses and networks
 
 =head1 VERSION
 
-version 0.09
+version 0.10
 
 =head1 DESCRIPTION
 
@@ -54,7 +54,9 @@ Here are some of the key differences between the two distributions:
 
 C<Net::Works> provides two classes, one for single IP addresses and one for
 networks (and subnets). With L<NetAddr::IP> a single address is represented as
-a /32 or /128 subnet.
+a /32 or /128 subnet. This is technically correct but can make the API harder
+to as whenever you want a single IP you're always stuck checking that the
+object you're working with is the size subnet.
 
 =item * Multiple constructors
 
@@ -108,20 +110,19 @@ Dave Rolsky <autarch@urth.org>
 
 =item *
 
-Olaf Alders <olaf@wundercounter.com>
+Greg Oschwald <oschwald@cpan.org>
 
 =item *
 
-Greg Oschwald <oschwald@cpan.org>
+Olaf Alders <oalders@wundercounter.com>
 
 =back
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2013 by MaxMind, Inc..
+This software is copyright (c) 2013 by MaxMind, Inc..
 
-This is free software, licensed under:
-
-  The Artistic License 2.0 (GPL Compatible)
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut

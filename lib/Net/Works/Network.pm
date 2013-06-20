@@ -1,6 +1,6 @@
 package Net::Works::Network;
 {
-  $Net::Works::Network::VERSION = '0.09';
+  $Net::Works::Network::VERSION = '0.10';
 }
 BEGIN {
   $Net::Works::Network::AUTHORITY = 'cpan:DROLSKY';
@@ -291,11 +291,10 @@ sub _last_as_integer {
 }
 
 sub range_as_subnets {
-    my $class = shift;
-    my $first = shift;
-    my $last  = shift;
-
-    my $version = ( any { /:/ } $first, $last ) ? 6 : 4;
+    my $class   = shift;
+    my $first   = shift;
+    my $last    = shift;
+    my $version = shift || ( any { /:/ } $first, $last ) ? 6 : 4;
 
     $first = Net::Works::Address->new_from_string(
         string  => $first,
@@ -382,7 +381,7 @@ Net::Works::Network - An object representing a single IP address (4 or 6) subnet
 
 =head1 VERSION
 
-version 0.09
+version 0.10
 
 =head1 SYNOPSIS
 
@@ -401,11 +400,11 @@ version 0.09
   my $iterator = $network->iterator();
   while ( my $ip = $iterator->() ) { ... }
 
-  my $network = Net::Works::Network->new_from_string( string => '1.0.0.4/32' );
-  print $network->max_mask_length(); # 30
+  my $network_32 = Net::Works::Network->new_from_string( string => '1.0.0.4/32' );
+  print $network_32->max_mask_length(); # 30
 
   # All methods work with IPv4 and IPv6 subnets
-  my $network = Net::Works::Network->new_from_string( string => 'a800:f000::/20' );
+  my $ipv6_network = Net::Works::Network->new_from_string( string => 'a800:f000::/20' );
 
   my @subnets = Net::Works::Network->range_as_subnets( '1.1.1.1', '1.1.1.32' );
   print $_->as_string, "\n" for @subnets;
@@ -490,7 +489,7 @@ For single address subnets (/32 or /128), this returns a single address.
 
 When it has exhausted all the addresses in the network, it returns C<undef>
 
-=head2 Net::Works::Network->range_as_subnets( $first, $last )
+=head2 Net::Works::Network->range_as_subnets( $first, $last, $version )
 
 Given two IP addresses as strings, this method breaks the range up into the
 largest subnets that include all the IP addresses in the range (including the
@@ -499,8 +498,9 @@ two passed to this method).
 It also excludes any reserved subnets in the range (such as the 10.0.0.0/8 or
 169.254.0.0/16 ranges).
 
-This method works with both IPv4 and IPv6 addresses. If either address
-contains a colon (:) then it assumes that you want IPv6 subnets.
+This method works with both IPv4 and IPv6 addresses. You can pass an explicit
+version as the final argument. If you don't, we check whether either address
+contains a colon (:). If either of them does, we assume you want IPv6 subnets.
 
 =head1 AUTHORS
 
@@ -512,20 +512,19 @@ Dave Rolsky <autarch@urth.org>
 
 =item *
 
-Olaf Alders <olaf@wundercounter.com>
+Greg Oschwald <oschwald@cpan.org>
 
 =item *
 
-Greg Oschwald <oschwald@cpan.org>
+Olaf Alders <oalders@wundercounter.com>
 
 =back
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2013 by MaxMind, Inc..
+This software is copyright (c) 2013 by MaxMind, Inc..
 
-This is free software, licensed under:
-
-  The Artistic License 2.0 (GPL Compatible)
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut

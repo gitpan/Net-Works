@@ -1,6 +1,6 @@
 package Net::Works::Address;
 {
-  $Net::Works::Address::VERSION = '0.09';
+  $Net::Works::Address::VERSION = '0.10';
 }
 BEGIN {
   $Net::Works::Address::AUTHORITY = 'cpan:DROLSKY';
@@ -199,7 +199,7 @@ Net::Works::Address - An object representing a single IP (4 or 6) address
 
 =head1 VERSION
 
-version 0.09
+version 0.10
 
 =head1 SYNOPSIS
 
@@ -218,10 +218,10 @@ version 0.09
 
   my @sorted = sort $next, $prev, $ip;
 
-  my $ip = Net::Works::Address->new_from_string( string => 'a900::1234' );
-  print $ip->as_integer(); # 224639531287650782520743393187378238004
+  my $ipv6 = Net::Works::Address->new_from_string( string => 'a900::1234' );
+  print $ipv6->as_integer(); # 224639531287650782520743393187378238004
 
-  my $ip = Net::Works::Address->new_from_integer( integer => 16909060 );
+  my $ip_from_int = Net::Works::Address->new_from_integer( integer => 16909060 );
 
 =head1 DESCRIPTION
 
@@ -329,20 +329,19 @@ Dave Rolsky <autarch@urth.org>
 
 =item *
 
-Olaf Alders <olaf@wundercounter.com>
+Greg Oschwald <oschwald@cpan.org>
 
 =item *
 
-Greg Oschwald <oschwald@cpan.org>
+Olaf Alders <oalders@wundercounter.com>
 
 =back
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2013 by MaxMind, Inc..
+This software is copyright (c) 2013 by MaxMind, Inc..
 
-This is free software, licensed under:
-
-  The Artistic License 2.0 (GPL Compatible)
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut
