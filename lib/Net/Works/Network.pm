@@ -1,6 +1,6 @@
 package Net::Works::Network;
 {
-  $Net::Works::Network::VERSION = '0.10';
+  $Net::Works::Network::VERSION = '0.11';
 }
 BEGIN {
   $Net::Works::Network::AUTHORITY = 'cpan:DROLSKY';
@@ -127,7 +127,7 @@ sub new_from_integer {
 }
 
 sub _build_address_string {
-    _integer_address_to_string( $_[0]->_first_as_integer );
+    _integer_address_to_string( $_[0]->first_as_integer );
 }
 
 sub _build_subnet_integer {
@@ -188,20 +188,20 @@ sub as_string {
 sub _build_first {
     my $self = shift;
 
-    my $id = $self->_first_as_integer;
+    my $int = $self->first_as_integer;
 
     return Net::Works::Address->new_from_integer(
-        integer => $id,
+        integer => $int,
         version => $self->version(),
     );
 }
 
-sub _first_as_integer { $_[0]->_integer() & $_[0]->_subnet_integer() }
+sub first_as_integer { $_[0]->_integer() & $_[0]->_subnet_integer() }
 
 sub _build_last {
     my $self = shift;
 
-    my $broadcast = $self->_last_as_integer;
+    my $broadcast = $self->last_as_integer;
 
     return Net::Works::Address->new_from_integer(
         integer => $broadcast,
@@ -209,7 +209,7 @@ sub _build_last {
     );
 }
 
-sub _last_as_integer {
+sub last_as_integer {
     $_[0]->_integer() | ( $_[0]->_max() & ~$_[0]->_subnet_integer() );
 }
 
@@ -332,7 +332,7 @@ sub _split_one_range {
 
         push @subnets, $max_network;
 
-        $first = $max_network->_last_as_integer + 1;
+        $first = $max_network->last_as_integer + 1;
     }
 
     return @subnets;
@@ -381,7 +381,7 @@ Net::Works::Network - An object representing a single IP address (4 or 6) subnet
 
 =head1 VERSION
 
-version 0.10
+version 0.11
 
 =head1 SYNOPSIS
 
@@ -476,9 +476,19 @@ subnet, so this returns 24.
 
 Returns the first IP in the network as an L<Net::Works::Address> object.
 
+=head2 $network->first_as_integer()
+
+Returns the first IP in the network as an integer. This may be a
+L<Math::Int128> object.
+
 =head2 $network->last()
 
 Returns the last IP in the network as an L<Net::Works::Address> object.
+
+=head2 $network->last_as_integer()
+
+Returns the last IP in the network as an integer. This may be a
+L<Math::Int128> object.
 
 =head2 $network->iterator()
 

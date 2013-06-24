@@ -1,6 +1,6 @@
 package Net::Works::Address;
 {
-  $Net::Works::Address::VERSION = '0.10';
+  $Net::Works::Address::VERSION = '0.11';
 }
 BEGIN {
   $Net::Works::Address::AUTHORITY = 'cpan:DROLSKY';
@@ -199,7 +199,7 @@ Net::Works::Address - An object representing a single IP (4 or 6) address
 
 =head1 VERSION
 
-version 0.10
+version 0.11
 
 =head1 SYNOPSIS
 

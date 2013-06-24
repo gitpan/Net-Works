@@ -1,6 +1,6 @@
 package Net::Works::Util;
 {
-  $Net::Works::Util::VERSION = '0.10';
+  $Net::Works::Util::VERSION = '0.11';
 }
 BEGIN {
   $Net::Works::Util::AUTHORITY = 'cpan:DROLSKY';
@@ -87,7 +87,7 @@ Net::Works::Util - Utility subroutines for Net-Works
 
 =head1 VERSION
 
-version 0.10
+version 0.11
 
 =head1 DESCRIPTION
 
