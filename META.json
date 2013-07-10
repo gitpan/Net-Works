@@ -6,7 +6,7 @@
       "Olaf Alders <oalders@wundercounter.com>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Zilla version 4.300035, CPAN::Meta::Converter version 2.120921",
+   "generated_by" : "Dist::Zilla version 4.300035, CPAN::Meta::Converter version 2.131560",
    "license" : [
       "perl_5"
    ],
@@ -33,17 +33,14 @@
             "Exporter" : "0",
             "List::AllUtils" : "0",
             "Math::Int128" : "0.06",
-            "Moose" : "0",
-            "Moose::Role" : "0",
-            "MooseX::Types" : "0",
-            "MooseX::Types::Combine" : "0",
-            "MooseX::Types::Moose" : "0",
+            "Moo" : "0",
+            "Moo::Role" : "0",
             "Scalar::Util" : "0",
             "Socket" : "1.99",
+            "Sub::Quote" : "0",
             "integer" : "0",
             "namespace::autoclean" : "0",
             "overload" : "0",
-            "parent" : "0",
             "perl" : "5.010000",
             "strict" : "0",
             "warnings" : "0"
@@ -59,8 +56,7 @@
    "release_status" : "stable",
    "resources" : {
       "bugtracker" : {
-         "mailto" : "bug-net-works@rt.cpan.org",
-         "web" : "http://rt.cpan.org/NoAuth/Bugs.html?Dist=Net-Works"
+         "web" : "https://github.com/maxmind/Net-Works/issues"
       },
       "repository" : {
          "type" : "git",
@@ -68,7 +64,10 @@
          "web" : "https://github.com/maxmind/Net-Works"
       }
    },
-   "version" : "0.11",
-   "x_authority" : "cpan:DROLSKY"
+   "version" : "0.12",
+   "x_authority" : "cpan:DROLSKY",
+   "x_contributors" : [
+      "William Stevenson <wstevenson@maxmind.com>"
+   ]
 }
 

@@ -24,17 +24,14 @@ my %WriteMakefileArgs = (
     "Exporter" => 0,
     "List::AllUtils" => 0,
     "Math::Int128" => "0.06",
-    "Moose" => 0,
-    "Moose::Role" => 0,
-    "MooseX::Types" => 0,
-    "MooseX::Types::Combine" => 0,
-    "MooseX::Types::Moose" => 0,
+    "Moo" => 0,
+    "Moo::Role" => 0,
     "Scalar::Util" => 0,
     "Socket" => "1.99",
+    "Sub::Quote" => 0,
     "integer" => 0,
     "namespace::autoclean" => 0,
     "overload" => 0,
-    "parent" => 0,
     "strict" => 0,
     "warnings" => 0
   },
@@ -42,7 +39,7 @@ my %WriteMakefileArgs = (
     "Test::Fatal" => 0,
     "Test::More" => "0.88"
   },
-  "VERSION" => "0.11",
+  "VERSION" => "0.12",
   "test" => {
     "TESTS" => "t/*.t"
   }

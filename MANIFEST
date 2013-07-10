@@ -13,7 +13,6 @@ lib/Net/Works/Address.pm
 lib/Net/Works/Network.pm
 lib/Net/Works/Role/IP.pm
 lib/Net/Works/Types.pm
-lib/Net/Works/Types/Internal.pm
 lib/Net/Works/Util.pm
 t/Address.t
 t/Network-splitting.t

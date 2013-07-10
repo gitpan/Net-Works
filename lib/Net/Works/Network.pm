@@ -1,6 +1,6 @@
 package Net::Works::Network;
 {
-  $Net::Works::Network::VERSION = '0.11';
+  $Net::Works::Network::VERSION = '0.12';
 }
 BEGIN {
   $Net::Works::Network::AUTHORITY = 'cpan:DROLSKY';
@@ -13,20 +13,20 @@ use namespace::autoclean;
 use List::AllUtils qw( any );
 use Math::Int128 qw( uint128 );
 use Net::Works::Address;
-use Net::Works::Types qw( Int IPInt MaskLength Str );
+use Net::Works::Types qw( IPInt MaskLength NetWorksAddress Str );
 use Net::Works::Util
     qw( _integer_address_to_string _string_address_to_integer );
 use Socket 1.99 qw( inet_ntop inet_pton AF_INET AF_INET6 );
 
 use integer;
 
-use Moose;
+use Moo;
 
 with 'Net::Works::Role::IP';
 
 has first => (
     is       => 'ro',
-    isa      => 'Net::Works::Address',
+    isa      => NetWorksAddress,
     init_arg => undef,
     lazy     => 1,
     builder  => '_build_first',
@@ -34,7 +34,7 @@ has first => (
 
 has last => (
     is       => 'ro',
-    isa      => 'Net::Works::Address',
+    isa      => NetWorksAddress,
     init_arg => undef,
     lazy     => 1,
     builder  => '_build_last',
@@ -69,7 +69,7 @@ sub BUILD {
 
     my $max = $self->version() == 4 ? 32 : 128;
     if ( $self->mask_length() < 0 || $self->mask_length() > $max ) {
-        die $self->mask_length() . ' is not a valid IP mask length';
+        die $self->mask_length() . ' is not a valid IP network mask length';
     }
 
     return;
@@ -381,7 +381,7 @@ Net::Works::Network - An object representing a single IP address (4 or 6) subnet
 
 =head1 VERSION
 
-version 0.11
+version 0.12
 
 =head1 SYNOPSIS
 
@@ -394,11 +394,11 @@ version 0.11
   my $first = $network->first();
   print $first->as_string();    # 1.0.0.0
 
-  my $last = $network->first();
+  my $last = $network->last();
   print $last->as_string();     # 1.0.0.255
 
   my $iterator = $network->iterator();
-  while ( my $ip = $iterator->() ) { ... }
+  while ( my $ip = $iterator->() ) { print $ip . "\n"; }
 
   my $network_32 = Net::Works::Network->new_from_string( string => '1.0.0.4/32' );
   print $network_32->max_mask_length(); # 30
@@ -529,6 +529,10 @@ Greg Oschwald <oschwald@cpan.org>
 Olaf Alders <oalders@wundercounter.com>
 
 =back
+
+=head1 CONTRIBUTOR
+
+William Stevenson <wstevenson@maxmind.com>
 
 =head1 COPYRIGHT AND LICENSE
 

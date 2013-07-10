@@ -1,6 +1,6 @@
 package Net::Works::Address;
 {
-  $Net::Works::Address::VERSION = '0.11';
+  $Net::Works::Address::VERSION = '0.12';
 }
 BEGIN {
   $Net::Works::Address::AUTHORITY = 'cpan:DROLSKY';
@@ -29,7 +29,7 @@ use overload (
     '<=>' => '_compare_overload',
 );
 
-use Moose;
+use Moo;
 
 with 'Net::Works::Role::IP';
 
@@ -199,7 +199,7 @@ Net::Works::Address - An object representing a single IP (4 or 6) address
 
 =head1 VERSION
 
-version 0.11
+version 0.12
 
 =head1 SYNOPSIS
 
@@ -214,7 +214,7 @@ version 0.11
   my $next = $ip->next_ip();     # 1.2.3.5
   my $prev = $ip->previous_ip(); # 1.2.3.4
 
-  if ( $next > $ip ) { ... }
+  if ( $next > $ip ) { print $ip->as_string(); }
 
   my @sorted = sort $next, $prev, $ip;
 
@@ -336,6 +336,10 @@ Greg Oschwald <oschwald@cpan.org>
 Olaf Alders <oalders@wundercounter.com>
 
 =back
+
+=head1 CONTRIBUTOR
+
+William Stevenson <wstevenson@maxmind.com>
 
 =head1 COPYRIGHT AND LICENSE
 
