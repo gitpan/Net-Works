@@ -1,6 +1,6 @@
 package Net::Works::Role::IP;
 {
-  $Net::Works::Role::IP::VERSION = '0.12';
+  $Net::Works::Role::IP::VERSION = '0.13';
 }
 BEGIN {
   $Net::Works::Role::IP::AUTHORITY = 'cpan:DROLSKY';

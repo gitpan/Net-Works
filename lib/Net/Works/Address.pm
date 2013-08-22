@@ -1,6 +1,6 @@
 package Net::Works::Address;
 {
-  $Net::Works::Address::VERSION = '0.12';
+  $Net::Works::Address::VERSION = '0.13';
 }
 BEGIN {
   $Net::Works::Address::AUTHORITY = 'cpan:DROLSKY';
@@ -199,9 +199,11 @@ Net::Works::Address - An object representing a single IP (4 or 6) address
 
 =head1 VERSION
 
-version 0.12
+version 0.13
 
 =head1 SYNOPSIS
+
+  use Net::Works::Address;
 
   my $ip = Net::Works::Address->new_from_string( string => '1.2.3.4' );
   print $ip->as_string();     # 1.2.3.4
@@ -337,9 +339,19 @@ Olaf Alders <oalders@wundercounter.com>
 
 =back
 
-=head1 CONTRIBUTOR
+=head1 CONTRIBUTORS
+
+=over 4
+
+=item *
+
+TJ Mather <tjmather@maxmind.com>
+
+=item *
 
 William Stevenson <wstevenson@maxmind.com>
+
+=back
 
 =head1 COPYRIGHT AND LICENSE
 

@@ -1,6 +1,6 @@
 package Net::Works::Network;
 {
-  $Net::Works::Network::VERSION = '0.12';
+  $Net::Works::Network::VERSION = '0.13';
 }
 BEGIN {
   $Net::Works::Network::AUTHORITY = 'cpan:DROLSKY';
@@ -67,7 +67,7 @@ sub BUILD {
 
     $self->_validate_ip_integer();
 
-    my $max = $self->version() == 4 ? 32 : 128;
+    my $max = $self->bits();
     if ( $self->mask_length() < 0 || $self->mask_length() > $max ) {
         die $self->mask_length() . ' is not a valid IP network mask length';
     }
@@ -211,6 +211,49 @@ sub _build_last {
 
 sub last_as_integer {
     $_[0]->_integer() | ( $_[0]->_max() & ~$_[0]->_subnet_integer() );
+}
+
+sub contains {
+    my $self  = shift;
+    my $thing = shift;
+
+    my $first_integer;
+    my $last_integer;
+    if ( $thing->isa('Net::Works::Address') ) {
+        $first_integer = $last_integer = $thing->as_integer();
+    }
+    elsif ( $thing->isa('Net::Works::Network') ) {
+        $first_integer = $thing->first_as_integer();
+        $last_integer  = $thing->last_as_integer();
+    }
+    else {
+        die
+            "$thing is not a Net::Works::Address or Net::Works::Network object";
+    }
+
+    return $first_integer >= $self->first_as_integer()
+        && $last_integer <= $self->last_as_integer();
+}
+
+sub split {
+    my $self  = shift;
+
+    return () if $self->mask_length() == $self->bits();
+
+    my $first_int = $self->first_as_integer();
+    my $last_int = $self->last_as_integer();
+
+    return (
+        Net::Works::Network->new_from_integer(
+            integer     => $first_int,
+            mask_length => $self->mask_length() + 1,
+        ),
+        Net::Works::Network->new_from_integer(
+            integer => ( $first_int + ( ( $last_int - $first_int ) / 2 ) )
+                + 1,
+            mask_length => $self->mask_length() + 1,
+        )
+    );
 }
 
 {
@@ -381,9 +424,11 @@ Net::Works::Network - An object representing a single IP address (4 or 6) subnet
 
 =head1 VERSION
 
-version 0.12
+version 0.13
 
 =head1 SYNOPSIS
+
+  use Net::Works::Network;
 
   my $network = Net::Works::Network->new_from_string( string => '1.0.0.0/24' );
   print $network->as_string();          # 1.0.0.0/24
@@ -499,6 +544,21 @@ For single address subnets (/32 or /128), this returns a single address.
 
 When it has exhausted all the addresses in the network, it returns C<undef>
 
+=head2 $network->contains($address_or_network)
+
+This method accepts a single L<Net::Works::Address> or L<Net::Works::Network>
+object. It returns true if the given address or network is contained by the
+network it is called on. Note that a network always contains itself.
+
+=head2 $network->split()
+
+This returns a list of two new network objects representing the original
+network split into two halves. For example, splitting C<1.1.10/24> returns
+C<1.1.1.0/25> and C<1.1.1.128/25>.
+
+If the original networks is a single address network (a /32 in IPv4 or /128 in
+IPv6) then this method returns an empty list.
+
 =head2 Net::Works::Network->range_as_subnets( $first, $last, $version )
 
 Given two IP addresses as strings, this method breaks the range up into the
@@ -530,9 +590,19 @@ Olaf Alders <oalders@wundercounter.com>
 
 =back
 
-=head1 CONTRIBUTOR
+=head1 CONTRIBUTORS
+
+=over 4
+
+=item *
+
+TJ Mather <tjmather@maxmind.com>
+
+=item *
 
 William Stevenson <wstevenson@maxmind.com>
+
+=back
 
 =head1 COPYRIGHT AND LICENSE
 

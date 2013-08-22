@@ -1,6 +1,6 @@
 package Net::Works::Types;
 {
-  $Net::Works::Types::VERSION = '0.12';
+  $Net::Works::Types::VERSION = '0.13';
 }
 BEGIN {
   $Net::Works::Types::AUTHORITY = 'cpan:DROLSKY';

@@ -35,7 +35,8 @@ requires:
 resources:
   bugtracker: https://github.com/maxmind/Net-Works/issues
   repository: git://github.com/maxmind/Net-Works.git
-version: 0.12
+version: 0.13
 x_authority: cpan:DROLSKY
 x_contributors:
+  - 'TJ Mather <tjmather@maxmind.com>'
   - 'William Stevenson <wstevenson@maxmind.com>'
