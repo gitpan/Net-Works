@@ -1,6 +1,6 @@
 package Net::Works::Network;
 {
-  $Net::Works::Network::VERSION = '0.13';
+  $Net::Works::Network::VERSION = '0.14';
 }
 BEGIN {
   $Net::Works::Network::AUTHORITY = 'cpan:DROLSKY';
@@ -8,7 +8,6 @@ BEGIN {
 
 use strict;
 use warnings;
-use namespace::autoclean;
 
 use List::AllUtils qw( any );
 use Math::Int128 qw( uint128 );
@@ -19,6 +18,15 @@ use Net::Works::Util
 use Socket 1.99 qw( inet_ntop inet_pton AF_INET AF_INET6 );
 
 use integer;
+
+# Using this currently breaks overloading - see
+# https://rt.cpan.org/Ticket/Display.html?id=50938
+#
+#use namespace::autoclean;
+
+use overload (
+    q{""} => '_overloaded_as_string',
+);
 
 use Moo;
 
@@ -256,21 +264,62 @@ sub split {
     );
 }
 
+sub range_as_subnets {
+    my $class   = shift;
+    my $first   = shift;
+    my $last    = shift;
+    my $version = shift || ( any { /:/ } $first, $last ) ? 6 : 4;
+
+    $first = Net::Works::Address->new_from_string(
+        string  => $first,
+        version => $version,
+    ) unless ref $first;
+
+    $last = Net::Works::Address->new_from_string(
+        string  => $last,
+        version => $version,
+    ) unless ref $last;
+
+    my @ranges = $class->_remove_reserved_subnets_from_range(
+        $first->as_integer(),
+        $last->as_integer(),
+        $version
+    );
+
+    my @subnets;
+    for my $range (@ranges) {
+        push @subnets, $class->_split_one_range( @{$range}, $version );
+    }
+
+    return @subnets;
+}
+
 {
     my @reserved_4 = qw(
+        0.0.0.0/8
         10.0.0.0/8
+        100.64.0.0/10
         127.0.0.0/8
         169.254.0.0/16
         172.16.0.0/12
+        192.0.0.0/29
         192.0.2.0/24
         192.88.99.0/24
         192.168.0.0/16
+        198.18.0.0/15
+        198.51.100.0/24
+        203.0.113.0/24
         224.0.0.0/4
+        240.0.0.0/4
     );
 
+    # ::/128 and ::1/128 are reserved under IPv6 but these are already covered
+    # under 0.0.0.0/8
     my @reserved_6 = (
         @reserved_4, qw(
-            2001::/32
+            100::/64
+            2001::/23
+            2001:db8::/32
             fc00::/7
             fe80::/10
             ff00::/8
@@ -331,36 +380,6 @@ sub split {
 
         return @ranges;
     }
-}
-
-sub range_as_subnets {
-    my $class   = shift;
-    my $first   = shift;
-    my $last    = shift;
-    my $version = shift || ( any { /:/ } $first, $last ) ? 6 : 4;
-
-    $first = Net::Works::Address->new_from_string(
-        string  => $first,
-        version => $version,
-    ) unless ref $first;
-
-    $last = Net::Works::Address->new_from_string(
-        string  => $last,
-        version => $version,
-    ) unless ref $last;
-
-    my @ranges = $class->_remove_reserved_subnets_from_range(
-        $first->as_integer(),
-        $last->as_integer(),
-        $version
-    );
-
-    my @subnets;
-    for my $range (@ranges) {
-        push @subnets, $class->_split_one_range( @{$range}, $version );
-    }
-
-    return @subnets;
 }
 
 sub _split_one_range {
@@ -424,41 +443,41 @@ Net::Works::Network - An object representing a single IP address (4 or 6) subnet
 
 =head1 VERSION
 
-version 0.13
+version 0.14
 
 =head1 SYNOPSIS
 
   use Net::Works::Network;
 
-  my $network = Net::Works::Network->new_from_string( string => '1.0.0.0/24' );
-  print $network->as_string();          # 1.0.0.0/24
+  my $network = Net::Works::Network->new_from_string( string => '192.0.2.0/24' );
+  print $network->as_string();          # 192.0.2.0/24
   print $network->mask_length();        # 24
   print $network->bits();               # 32
   print $network->version();            # 4
 
   my $first = $network->first();
-  print $first->as_string();    # 1.0.0.0
+  print $first->as_string();    # 192.0.2.0
 
   my $last = $network->last();
-  print $last->as_string();     # 1.0.0.255
+  print $last->as_string();     # 192.0.2.255
 
   my $iterator = $network->iterator();
   while ( my $ip = $iterator->() ) { print $ip . "\n"; }
 
-  my $network_32 = Net::Works::Network->new_from_string( string => '1.0.0.4/32' );
+  my $network_32 = Net::Works::Network->new_from_string( string => '192.0.2.4/32' );
   print $network_32->max_mask_length(); # 30
 
   # All methods work with IPv4 and IPv6 subnets
-  my $ipv6_network = Net::Works::Network->new_from_string( string => 'a800:f000::/20' );
+  my $ipv6_network = Net::Works::Network->new_from_string( string => '2001:db8::/48' );
 
-  my @subnets = Net::Works::Network->range_as_subnets( '1.1.1.1', '1.1.1.32' );
+  my @subnets = Net::Works::Network->range_as_subnets( '192.0.2.1', '192.0.2.32' );
   print $_->as_string, "\n" for @subnets;
-  # 1.1.1.1/32
-  # 1.1.1.2/31
-  # 1.1.1.4/30
-  # 1.1.1.8/29
-  # 1.1.1.16/28
-  # 1.1.1.32/32
+  # 192.0.2.1/32
+  # 192.0.2.2/31
+  # 192.0.2.4/30
+  # 192.0.2.8/29
+  # 192.0.2.16/28
+  # 192.0.2.32/32
 
 =head1 DESCRIPTION
 
@@ -477,7 +496,7 @@ This class provides the following methods:
 
 This method takes a C<string> parameter and an optional C<version>
 parameter. The C<string> parameter should be a string representation of an IP
-address subnet, e.g., "4.3.2.0/24".
+address subnet, e.g., "192.0.2.0/24".
 
 The C<version> parameter should be either C<4> or C<6>, but you don't really
 need this unless you're trying to force a dotted quad to be interpreted as an
@@ -494,8 +513,8 @@ IPv6. The C<version> parameter should be either C<4> or C<6>.
 
 =head2 $network->as_string()
 
-Returns a string representation of the network like "1.0.0.0/24" or
-"a800:f000::/105". The IP address in the string is the first address
+Returns a string representation of the network like "192.0.2.0/24" or
+"2001:db8::/48". The IP address in the string is the first address
 within the subnet.
 
 =head2 $network->version()
@@ -514,8 +533,8 @@ Returns the number of bit of an address in the network, which is either 32
 =head2 $network->max_mask_length()
 
 This returns the maximum possible numeric subnet that this network could fit
-in. In other words, the 1.1.1.0/32 subnet could be part of the 1.1.1.0/24
-subnet, so this returns 24.
+in. In other words, the 192.0.2.0/28 subnet could be part of the 192.0.2.0/23
+subnet, so this returns 23.
 
 =head2 $network->first()
 
@@ -553,8 +572,8 @@ network it is called on. Note that a network always contains itself.
 =head2 $network->split()
 
 This returns a list of two new network objects representing the original
-network split into two halves. For example, splitting C<1.1.10/24> returns
-C<1.1.1.0/25> and C<1.1.1.128/25>.
+network split into two halves. For example, splitting C<192.0.2.0/24> returns
+C<192.0.2.0/25> and C<192.0.2.128/25>.
 
 If the original networks is a single address network (a /32 in IPv4 or /128 in
 IPv6) then this method returns an empty list.
@@ -565,12 +584,49 @@ Given two IP addresses as strings, this method breaks the range up into the
 largest subnets that include all the IP addresses in the range (including the
 two passed to this method).
 
-It also excludes any reserved subnets in the range (such as the 10.0.0.0/8 or
-169.254.0.0/16 ranges).
+This method also excludes any reserved subnets such as the
+L<RFC1918|http://tools.ietf.org/html/rfc1918> IPv4 private address space,
+L<RFC5735|http://tools.ietf.org/html/rfc5735> IPv4 special-use address space and
+L<RFC5156|http://tools.ietf.org/html/rfc5156> IPv6 special-use address space.
+
+An overview can be found at the IANA
+L<IPv4|http://www.iana.org/assignments/iana-ipv4-special-registry/iana-ipv4-special-registry.xhtml>
+and
+L<IPv6|http://www.iana.org/assignments/iana-ipv6-special-registry/iana-ipv6-special-registry.xhtml>
+special-purpose address registries.
+
+The networks currently treated as reserved are:
+
+    0.0.0.0/8
+    10.0.0.0/8
+    100.64.0.0/10
+    127.0.0.0/8
+    169.254.0.0/16
+    172.16.0.0/12
+    192.0.0.0/29
+    192.0.2.0/24
+    192.88.99.0/24
+    192.168.0.0/16
+    198.18.0.0/15
+    198.51.100.0/24
+    203.0.113.0/24
+    224.0.0.0/4
+    240.0.0.0/4
+
+    100::/64
+    2001::/23
+    2001:db8::/32
+    fc00::/7
+    fe80::/10
+    ff00::/8
 
 This method works with both IPv4 and IPv6 addresses. You can pass an explicit
 version as the final argument. If you don't, we check whether either address
 contains a colon (:). If either of them does, we assume you want IPv6 subnets.
+
+When given an IPv6 range that includes the first 32 bits of addresses (the
+IPv4 space), both IPv4 I<and> IPv6 reserved networks are removed from the
+range.
 
 =head1 AUTHORS
 
@@ -593,6 +649,10 @@ Olaf Alders <oalders@wundercounter.com>
 =head1 CONTRIBUTORS
 
 =over 4
+
+=item *
+
+Alexander Hartmaier <abraxxa@cpan.org>
 
 =item *
 

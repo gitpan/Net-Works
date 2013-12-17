@@ -1,6 +1,6 @@
 package Net::Works;
 {
-  $Net::Works::VERSION = '0.13';
+  $Net::Works::VERSION = '0.14';
 }
 BEGIN {
   $Net::Works::AUTHORITY = 'cpan:DROLSKY';
@@ -30,7 +30,7 @@ Net::Works - Sane APIs for IP addresses and networks
 
 =head1 VERSION
 
-version 0.13
+version 0.14
 
 =head1 DESCRIPTION
 
@@ -60,8 +60,8 @@ object you're working with is the size subnet.
 
 =item * Multiple constructors
 
-L<Net::Works> allows you to construct an IP address from a string ("1.2.3.4")
-or an integer (1097) using separate constructors.
+L<Net::Works> allows you to construct an IP address from a string ("192.0.2.1")
+or an integer (3221225985) using separate constructors.
 
 =item * Next & previous IP
 
@@ -121,6 +121,10 @@ Olaf Alders <oalders@wundercounter.com>
 =head1 CONTRIBUTORS
 
 =over 4
+
+=item *
+
+Alexander Hartmaier <abraxxa@cpan.org>
 
 =item *
 

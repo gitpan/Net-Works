@@ -1,6 +1,6 @@
 package Net::Works::Role::IP;
 {
-  $Net::Works::Role::IP::VERSION = '0.13';
+  $Net::Works::Role::IP::VERSION = '0.14';
 }
 BEGIN {
   $Net::Works::Role::IP::AUTHORITY = 'cpan:DROLSKY';
@@ -71,6 +71,11 @@ sub _validate_ip_integer {
     }
 
     return;
+}
+
+# overload passes extra arguments to this sub for some reason
+sub _overloaded_as_string {
+    return $_[0]->as_string();
 }
 
 1;
