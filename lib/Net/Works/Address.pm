@@ -1,6 +1,6 @@
 package Net::Works::Address;
 {
-  $Net::Works::Address::VERSION = '0.14';
+  $Net::Works::Address::VERSION = '0.15';
 }
 BEGIN {
   $Net::Works::Address::AUTHORITY = 'cpan:DROLSKY';
@@ -87,10 +87,6 @@ sub new_from_integer {
     my $int     = delete $p{integer};
     my $version = delete $p{version};
     $version ||= ref $int ? 6 : 4;
-
-    if ( $version == 4 && ref($int) ) {
-        $int = uint128_to_number($int);
-    }
 
     return $class->new(
         _integer => $int,
@@ -194,7 +190,7 @@ Net::Works::Address - An object representing a single IP (4 or 6) address
 
 =head1 VERSION
 
-version 0.14
+version 0.15
 
 =head1 SYNOPSIS
 

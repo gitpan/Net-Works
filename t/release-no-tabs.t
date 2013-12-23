@@ -8,9 +8,20 @@ BEGIN {
 
 use strict;
 use warnings;
-use Test::More;
 
-eval 'use Test::NoTabs';
-plan skip_all => 'Test::NoTabs required' if $@;
+# this test was generated with Dist::Zilla::Plugin::NoTabsTests 0.06
 
-all_perl_files_ok();
+use Test::More 0.88;
+use Test::NoTabs;
+
+my @files = (
+    'lib/Net/Works.pm',
+    'lib/Net/Works/Address.pm',
+    'lib/Net/Works/Network.pm',
+    'lib/Net/Works/Role/IP.pm',
+    'lib/Net/Works/Types.pm',
+    'lib/Net/Works/Util.pm'
+);
+
+notabs_ok($_) foreach @files;
+done_testing;

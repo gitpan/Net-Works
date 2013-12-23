@@ -1,6 +1,6 @@
 package Net::Works::Role::IP;
 {
-  $Net::Works::Role::IP::VERSION = '0.14';
+  $Net::Works::Role::IP::VERSION = '0.15';
 }
 BEGIN {
   $Net::Works::Role::IP::AUTHORITY = 'cpan:DROLSKY';
@@ -10,7 +10,7 @@ use strict;
 use warnings;
 use namespace::autoclean;
 
-use Math::Int128 qw( uint128 );
+use Math::Int128 qw( uint128 uint128_to_number );
 use Net::Works::Types qw( Int IPInt IPVersion );
 use Socket qw( AF_INET AF_INET6 );
 
@@ -68,6 +68,9 @@ sub _validate_ip_integer {
     else {
         die "$int is not a valid integer for an IP address"
             if $int >= 2**32;
+        if ( ref $int ) {
+            $self->_set_integer( uint128_to_number($int) );
+        }
     }
 
     return;
