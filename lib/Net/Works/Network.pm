@@ -1,6 +1,6 @@
 package Net::Works::Network;
 {
-  $Net::Works::Network::VERSION = '0.15';
+  $Net::Works::Network::VERSION = '0.16';
 }
 BEGIN {
   $Net::Works::Network::AUTHORITY = 'cpan:DROLSKY';
@@ -148,7 +148,11 @@ sub _mask_length_to_mask {
     my $self    = shift;
     my $masklen = shift;
 
-    return $self->_max() & ( $self->_max() << ( $self->bits - $masklen ) );
+    # We need to special case 0 because left shifting a 128-bit integer by 128
+    # bits does not produce 0.
+    return $self->mask_length() == 0
+        ? 0
+        : $self->_max() & ( $self->_max() << ( $self->bits - $masklen ) );
 }
 
 sub max_mask_length {
@@ -209,16 +213,18 @@ sub first_as_integer { $_[0]->_integer() & $_[0]->_subnet_integer() }
 sub _build_last {
     my $self = shift;
 
-    my $broadcast = $self->last_as_integer;
+    my $int = $self->last_as_integer;
 
     return Net::Works::Address->new_from_integer(
-        integer => $broadcast,
+        integer => $int,
         version => $self->version(),
     );
 }
 
 sub last_as_integer {
-    $_[0]->_integer() | ( $_[0]->_max() & ~$_[0]->_subnet_integer() );
+    my $self = shift;
+
+    return $self->_integer() | ( $self->_max() & ~$self->_subnet_integer() );
 }
 
 sub contains {
@@ -443,7 +449,7 @@ Net::Works::Network - An object representing a single IP address (4 or 6) subnet
 
 =head1 VERSION
 
-version 0.15
+version 0.16
 
 =head1 SYNOPSIS
 

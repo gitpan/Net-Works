@@ -1,6 +1,6 @@
 package Net::Works;
 {
-  $Net::Works::VERSION = '0.15';
+  $Net::Works::VERSION = '0.16';
 }
 BEGIN {
   $Net::Works::AUTHORITY = 'cpan:DROLSKY';
@@ -30,7 +30,7 @@ Net::Works - Sane APIs for IP addresses and networks
 
 =head1 VERSION
 
-version 0.15
+version 0.16
 
 =head1 DESCRIPTION
 

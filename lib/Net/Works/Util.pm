@@ -1,6 +1,6 @@
 package Net::Works::Util;
 {
-  $Net::Works::Util::VERSION = '0.15';
+  $Net::Works::Util::VERSION = '0.16';
 }
 BEGIN {
   $Net::Works::Util::AUTHORITY = 'cpan:DROLSKY';
@@ -51,7 +51,8 @@ sub _binary_address_to_string {
 
     my $family = length($binary) == 4 ? AF_INET : AF_INET6;
 
-    return inet_ntop( $family, $binary );
+    my $string = inet_ntop( $family, $binary );
+    return $string eq '::' ? '::0' : $string;
 }
 
 sub _integer_address_to_string {
@@ -87,7 +88,7 @@ Net::Works::Util - Utility subroutines for Net-Works
 
 =head1 VERSION
 
-version 0.15
+version 0.16
 
 =head1 DESCRIPTION
 
