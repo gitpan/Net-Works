@@ -1,18 +1,12 @@
 package Net::Works::Network;
-{
-  $Net::Works::Network::VERSION = '0.16';
-}
-BEGIN {
-  $Net::Works::Network::AUTHORITY = 'cpan:DROLSKY';
-}
-
+$Net::Works::Network::VERSION = '0.17';
 use strict;
 use warnings;
 
 use List::AllUtils qw( any );
 use Math::Int128 qw( uint128 );
 use Net::Works::Address;
-use Net::Works::Types qw( IPInt MaskLength NetWorksAddress Str );
+use Net::Works::Types qw( IPInt PrefixLength NetWorksAddress Str );
 use Net::Works::Util
     qw( _integer_address_to_string _string_address_to_integer );
 use Socket 1.99 qw( inet_ntop inet_pton AF_INET AF_INET6 );
@@ -48,9 +42,9 @@ has last => (
     builder  => '_build_last',
 );
 
-has mask_length => (
+has prefix_length => (
     is       => 'ro',
-    isa      => MaskLength,
+    isa      => PrefixLength,
     required => 1,
 );
 
@@ -59,7 +53,7 @@ has _address_string => (
     isa      => Str,
     init_arg => undef,
     lazy     => 1,
-    builder  => '_build_address_string'
+    builder  => '_build_address_string',
 );
 
 has _subnet_integer => (
@@ -70,14 +64,28 @@ has _subnet_integer => (
     builder  => '_build_subnet_integer',
 );
 
+around BUILDARGS => sub {
+    my $orig  = shift;
+    my $class = shift;
+
+    my $p = $class->$orig(@_);
+    $p->{prefix_length} = delete $p->{mask_length}
+        if exists $p->{mask_length};
+
+    return $p;
+};
+
+sub mask_length { $_[0]->prefix_length() }
+
 sub BUILD {
     my $self = shift;
 
     $self->_validate_ip_integer();
 
     my $max = $self->bits();
-    if ( $self->mask_length() < 0 || $self->mask_length() > $max ) {
-        die $self->mask_length() . ' is not a valid IP network mask length';
+    if ( $self->prefix_length() > $max ) {
+        die $self->prefix_length()
+            . ' is not a valid IP network prefix length';
     }
 
     return;
@@ -89,16 +97,18 @@ sub new_from_string {
 
     my $integer;
     my $version;
-    my $masklen;
+    my $prefix_length;
 
     if ( defined $p{string} ) {
-        ( my $address, $masklen ) = split '/', $p{string};
+        ( my $address, $prefix_length ) = split '/', $p{string};
 
         $version
-            = $p{version} ? $p{version} : inet_pton( AF_INET6, $address ) ? 6 : 4;
+            = $p{version} ? $p{version}
+            : inet_pton( AF_INET6, $address ) ? 6
+            :                                   4;
 
         if ( $version == 6 && inet_pton( AF_INET, $address ) ) {
-            $masklen += 96;
+            $prefix_length += 96;
             $address = '::' . $address;
         }
 
@@ -108,13 +118,13 @@ sub new_from_string {
             unless defined $integer;
     }
     else {
-        die "undef is not a valid IP network";
+        die 'undef is not a valid IP network';
     }
 
     return $class->new(
-        _integer    => $integer,
-        mask_length => $masklen,
-        version     => $version,
+        _integer      => $integer,
+        prefix_length => $prefix_length,
+        version       => $version,
     );
 }
 
@@ -141,38 +151,41 @@ sub _build_address_string {
 sub _build_subnet_integer {
     my $self = shift;
 
-    return $self->_mask_length_to_mask( $self->mask_length() );
+    return $self->_prefix_length_to_mask( $self->prefix_length() );
 }
 
-sub _mask_length_to_mask {
-    my $self    = shift;
-    my $masklen = shift;
+sub _prefix_length_to_mask {
+    my $self          = shift;
+    my $prefix_length = shift;
 
     # We need to special case 0 because left shifting a 128-bit integer by 128
     # bits does not produce 0.
-    return $self->mask_length() == 0
+    return $self->prefix_length() == 0
         ? 0
-        : $self->_max() & ( $self->_max() << ( $self->bits - $masklen ) );
+        : $self->_max()
+        & ( $self->_max() << ( $self->bits - $prefix_length ) );
 }
 
-sub max_mask_length {
+sub max_prefix_length {
     my $self = shift;
 
     my $base = $self->first()->as_integer();
 
-    my $netmask = $self->mask_length();
+    my $prefix_length = $self->prefix_length();
 
     my $bits = $self->bits;
-    while ($netmask) {
-        my $mask = $self->_mask_length_to_mask($netmask);
+    while ($prefix_length) {
+        my $mask = $self->_prefix_length_to_mask($prefix_length);
 
         last if ( $base & $mask ) != $base;
 
-        $netmask--;
+        $prefix_length--;
     }
 
-    return $netmask + 1;
+    return $prefix_length + 1;
 }
+
+sub max_mask_length { $_[0]->max_prefix_length() }
 
 sub iterator {
     my $self = shift;
@@ -194,7 +207,7 @@ sub iterator {
 sub as_string {
     my $self = shift;
 
-    return join '/', lc $self->_address_string(), $self->mask_length();
+    return join '/', lc $self->_address_string(), $self->prefix_length();
 }
 
 sub _build_first {
@@ -250,22 +263,22 @@ sub contains {
 }
 
 sub split {
-    my $self  = shift;
+    my $self = shift;
 
-    return () if $self->mask_length() == $self->bits();
+    return () if $self->prefix_length() == $self->bits();
 
     my $first_int = $self->first_as_integer();
-    my $last_int = $self->last_as_integer();
+    my $last_int  = $self->last_as_integer();
 
     return (
         Net::Works::Network->new_from_integer(
-            integer     => $first_int,
-            mask_length => $self->mask_length() + 1,
+            integer       => $first_int,
+            prefix_length => $self->prefix_length() + 1,
         ),
         Net::Works::Network->new_from_integer(
             integer => ( $first_int + ( ( $last_int - $first_int ) / 2 ) )
                 + 1,
-            mask_length => $self->mask_length() + 1,
+            prefix_length => $self->prefix_length() + 1,
         )
     );
 }
@@ -411,25 +424,25 @@ sub _max_subnet {
     my $maxip   = shift;
     my $version = shift;
 
-    my $masklen = $version == 6 ? 128 : 32;
+    my $prefix_length = $version == 6 ? 128 : 32;
 
     my $v = $ip;
     my $reverse_mask = $version == 6 ? uint128(1) : 1;
 
     while (( $v & 1 ) == 0
-        && $masklen > 0
+        && $prefix_length > 0
         && ( $ip | $reverse_mask ) <= $maxip ) {
 
-        $masklen--;
+        $prefix_length--;
         $v = $v >> 1;
 
         $reverse_mask = ( $reverse_mask << 1 ) | 1;
     }
 
     return Net::Works::Network->new_from_integer(
-        integer     => $ip,
-        mask_length => $masklen,
-        version     => $version,
+        integer       => $ip,
+        prefix_length => $prefix_length,
+        version       => $version,
     );
 }
 
@@ -449,7 +462,7 @@ Net::Works::Network - An object representing a single IP address (4 or 6) subnet
 
 =head1 VERSION
 
-version 0.16
+version 0.17
 
 =head1 SYNOPSIS
 
@@ -457,7 +470,7 @@ version 0.16
 
   my $network = Net::Works::Network->new_from_string( string => '192.0.2.0/24' );
   print $network->as_string();          # 192.0.2.0/24
-  print $network->mask_length();        # 24
+  print $network->prefix_length();        # 24
   print $network->bits();               # 32
   print $network->version();            # 4
 
@@ -471,7 +484,7 @@ version 0.16
   while ( my $ip = $iterator->() ) { print $ip . "\n"; }
 
   my $network_32 = Net::Works::Network->new_from_string( string => '192.0.2.4/32' );
-  print $network_32->max_mask_length(); # 30
+  print $network_32->max_prefix_length(); # 30
 
   # All methods work with IPv4 and IPv6 subnets
   my $ipv6_network = Net::Works::Network->new_from_string( string => '2001:db8::/48' );
@@ -509,13 +522,19 @@ need this unless you're trying to force a dotted quad to be interpreted as an
 IPv6 network or to a force an IPv6 address colon-separated hex number to be
 interpreted as an IPv4 network.
 
+If you pass an IPv4 network but specify the version as C<6> then we will add
+96 to the netmask.
+
 =head2 Net::Works::Network->new_from_integer( ... )
 
-This method takes an C<integer> parameter, C<mask_length> parameter, and
+This method takes an C<integer> parameter, C<prefix_length> parameter, and
 an optional C<version> parameter. The C<integer> parameter should be an
-integer representation of an IP within the subnet. The C<mask_length>
+integer representation of an IP within the subnet. The C<prefix_length>
 parameter should be an integer between 0 and 32 for IPv4 or 0 and 128 for
 IPv6. The C<version> parameter should be either C<4> or C<6>.
+
+Note that if you are passing an IPv4 address that you want treated as an IPv6
+address you need to manually add 96 to the C<prefix_length> yourself.
 
 =head2 $network->as_string()
 
@@ -527,7 +546,7 @@ within the subnet.
 
 Returns a 4 or 6 to indicate whether this is an IPv4 or IPv6 network.
 
-=head2 $network->mask_length()
+=head2 $network->prefix_length()
 
 Returns the length of the netmask as an integer.
 
@@ -536,7 +555,7 @@ Returns the length of the netmask as an integer.
 Returns the number of bit of an address in the network, which is either 32
 (IPv4) or 128 (IPv6).
 
-=head2 $network->max_mask_length()
+=head2 $network->max_prefix_length()
 
 This returns the maximum possible numeric subnet that this network could fit
 in. In other words, the 192.0.2.0/28 subnet could be part of the 192.0.2.0/23
@@ -634,6 +653,15 @@ When given an IPv6 range that includes the first 32 bits of addresses (the
 IPv4 space), both IPv4 I<and> IPv6 reserved networks are removed from the
 range.
 
+=head1 DEPRECATED METHODS AND ATTRIBUTES
+
+Prior to version 0.17, this package referred to the prefix length as mask
+length. The C<mask_length()> and C<max_mask_length()> methods are deprecated,
+and will probably start warning in a future release. In addition, passing a
+C<mask_length> key to the C<new_from_integer()> constructor has been replaced
+by C<prefix_length>. The old key will continue to work for now but may start
+warning in a future release.
+
 =head1 AUTHORS
 
 =over 4
@@ -672,7 +700,7 @@ William Stevenson <wstevenson@maxmind.com>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2013 by MaxMind, Inc..
+This software is copyright (c) 2014 by MaxMind, Inc..
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

@@ -1,6 +1,7 @@
 use strict;
 use warnings;
 
+use B;
 use Math::Int128 qw( uint128 );
 use Test::Fatal;
 use Test::More 0.88;
@@ -26,9 +27,9 @@ use Net::Works::Network;
         like(
             exception {
                 Net::Works::Network->new_from_integer(
-                    integer     => $bad_num,
-                    mask_length => 20,
-                    version     => 4,
+                    integer       => $bad_num,
+                    prefix_length => 20,
+                    version       => 4,
                 );
             },
             qr/\Q$str_val is not a valid integer for an IP address/,
@@ -55,9 +56,9 @@ use Net::Works::Network;
         like(
             exception {
                 Net::Works::Network->new_from_integer(
-                    integer     => $bad_num,
-                    mask_length => 20,
-                    version     => 6,
+                    integer       => $bad_num,
+                    prefix_length => 20,
+                    version       => 6,
                 );
             },
             qr/\Q$str_val is not a valid integer for an IP address/,
@@ -133,7 +134,9 @@ use Net::Works::Network;
 }
 
 {
-    for my $bad (qw( 1.1.1.1/-1 1.1.1.1/33 )) {
+    for my $bad ( '1.1.1.1/-1', '1.1.1.1/33', '1.1.1.0/24;', "1.1.1.0/24\n" )
+    {
+        my $safe_bad = B::perlstring($bad);
         like(
             exception {
                 Net::Works::Network->new_from_string(
@@ -141,12 +144,13 @@ use Net::Works::Network;
                     version => 4,
                 );
             },
-            qr/\Qis not a valid IP network mask length/,
-            "Net::Works::Address->new_from_string() died with bad mask (v4)"
+            qr/\Qis not a valid IP network prefix length/,
+            "Net::Works::Address->new_from_string( string => $safe_bad, version => 4 ) died with bad prefix"
         );
     }
 
-    for my $bad (qw( ::1/-1 ::1/129 )) {
+    for my $bad ( '::1/-1', '::1/129', '::1/120;', "::1/120\n" ) {
+        my $safe_bad = B::perlstring($bad);
         like(
             exception {
                 Net::Works::Network->new_from_string(
@@ -154,8 +158,8 @@ use Net::Works::Network;
                     version => 6,
                 );
             },
-            qr/\Qis not a valid IP network mask length/,
-            "Net::Works::Address->new_from_string() died with bad mask (v6)"
+            qr/\Qis not a valid IP network prefix length/,
+            "Net::Works::Address->new_from_string( string => $safe_bad, version => 6 ) died with bad prefix"
         );
     }
 }

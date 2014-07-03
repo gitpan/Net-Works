@@ -1,11 +1,5 @@
 package Net::Works::Address;
-{
-  $Net::Works::Address::VERSION = '0.16';
-}
-BEGIN {
-  $Net::Works::Address::AUTHORITY = 'cpan:DROLSKY';
-}
-
+$Net::Works::Address::VERSION = '0.17';
 use strict;
 use warnings;
 
@@ -102,7 +96,7 @@ sub new_from_integer {
 sub _build_string {
     my $self = shift;
 
-    return _integer_address_to_string($self->_integer());
+    return _integer_address_to_string( $self->_integer() );
 }
 
 sub _build_binary { _integer_address_to_binary( $_[0]->as_integer() ) }
@@ -129,7 +123,7 @@ sub as_bit_string {
 
     if ( $self->version == 6 ) {
         my $hex = uint128_to_hex( $self->as_integer() );
-        my @ha = $hex =~ /.{8}/g;
+        my @ha  = $hex =~ /.{8}/g;
         return join '', map { sprintf( '%032b', hex($_) ) } @ha;
     }
     else {
@@ -137,7 +131,9 @@ sub as_bit_string {
     }
 }
 
-sub mask_length { $_[0]->bits() }
+sub prefix_length { $_[0]->bits() }
+
+sub mask_length { $_[0]->prefix_length() }
 
 sub next_ip {
     my $self = shift;
@@ -194,7 +190,7 @@ Net::Works::Address - An object representing a single IP (4 or 6) address
 
 =head1 VERSION
 
-version 0.16
+version 0.17
 
 =head1 SYNOPSIS
 
@@ -206,7 +202,7 @@ version 0.16
   print $ip->as_binary();     # 4-byte packed form of the address
   print $ip->as_bit_string(); # 11000000000000000000001000000001
   print $ip->version();       # 4
-  print $ip->mask_length();   # 32
+  print $ip->prefix_length();   # 32
 
   my $next = $ip->next_ip();     # 192.0.2.2
   my $prev = $ip->previous_ip(); # 192.0.2.0
@@ -285,14 +281,14 @@ of an IPv4 address (2**32 - 1). It's primarily useful for debugging.
 
 Returns a 4 or 6 to indicate whether this is an IPv4 or IPv6 address.
 
-=head2 $ip->mask_length()
+=head2 $ip->prefix_length()
 
-Returns the mask length for the IP address, which is either 32 (IPv4) or 128
+Returns the prefix length for the IP address, which is either 32 (IPv4) or 128
 (IPv6).
 
 =head2 $ip->bits()
 
-An alias for C<< $ip->mask_length() >>. This helps make addresses & network
+An alias for C<< $ip->prefix_length() >>. This helps make addresses & network
 objects interchangeable in some cases.
 
 =head2 $ip->next_ip()
@@ -356,7 +352,7 @@ William Stevenson <wstevenson@maxmind.com>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2013 by MaxMind, Inc..
+This software is copyright (c) 2014 by MaxMind, Inc..
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

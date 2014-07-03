@@ -1,14 +1,8 @@
 package Net::Works::Role::IP;
-{
-  $Net::Works::Role::IP::VERSION = '0.16';
-}
-BEGIN {
-  $Net::Works::Role::IP::AUTHORITY = 'cpan:DROLSKY';
-}
-
+$Net::Works::Role::IP::VERSION = '0.17';
 use strict;
 use warnings;
-use namespace::autoclean;
+use namespace::autoclean 0.16;
 
 use Math::Int128 qw( string_to_uint128 uint128 uint128_to_number );
 use Net::Works::Types qw( Int IPInt IPVersion );

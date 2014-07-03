@@ -1,3 +1,14 @@
+0.17     2014-07-03
+
+- The mask_length attribute (and related methods) in Net::Works::Network has
+  been renamed to prefix_length, which is more correct and consistent with the
+  terminology used for IPv6. The old names (and methods) are still available,
+  but will probably start warning in a future release. Fixes GH #8.
+
+- Require namespace::autoclean 0.16+ so our classes are not inflated from Moo
+  to Moose classes. Fixes GH #6.
+
+
 0.16     2013-12-25
 
 - The last address in the ::0/0 network was being returned as ::0 instead of
