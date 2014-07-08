@@ -67,10 +67,11 @@
          "web" : "https://github.com/maxmind/Net-Works"
       }
    },
-   "version" : "0.17",
+   "version" : "0.18",
    "x_authority" : "cpan:DROLSKY",
    "x_contributors" : [
       "Alexander Hartmaier <abraxxa@cpan.org>",
+      "Gregory Oschwald <oschwald@gmail.com>",
       "TJ Mather <tjmather@maxmind.com>",
       "William Stevenson <wstevenson@maxmind.com>"
    ]

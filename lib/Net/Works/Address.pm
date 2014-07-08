@@ -1,5 +1,5 @@
 package Net::Works::Address;
-$Net::Works::Address::VERSION = '0.17';
+$Net::Works::Address::VERSION = '0.18';
 use strict;
 use warnings;
 
@@ -190,7 +190,7 @@ Net::Works::Address - An object representing a single IP (4 or 6) address
 
 =head1 VERSION
 
-version 0.17
+version 0.18
 
 =head1 SYNOPSIS
 
@@ -339,6 +339,10 @@ Olaf Alders <oalders@wundercounter.com>
 =item *
 
 Alexander Hartmaier <abraxxa@cpan.org>
+
+=item *
+
+Gregory Oschwald <oschwald@gmail.com>
 
 =item *
 

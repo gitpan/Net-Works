@@ -1,8 +1,9 @@
 package Net::Works::Util;
-$Net::Works::Util::VERSION = '0.17';
+$Net::Works::Util::VERSION = '0.18';
 use strict;
 use warnings;
 
+use Carp qw( confess );
 use Math::Int128 qw( net_to_uint128 uint128_to_net );
 use Socket qw( AF_INET AF_INET6 inet_pton inet_ntop );
 use Scalar::Util qw( blessed );
@@ -59,11 +60,11 @@ sub _validate_ip_string {
 
     my $str_val = defined $str ? $str : 'undef';
     if ( $version == 4 ) {
-        die "$str_val is not a valid IPv4 address"
+        confess("$str_val is not a valid IPv4 address")
             unless defined $str && defined inet_pton( AF_INET, $str );
     }
     else {
-        die "$str_val is not a valid IPv6 address"
+        confess("$str_val is not a valid IPv6 address")
             unless defined $str && defined inet_pton( AF_INET6, $str );
     }
 }
@@ -82,7 +83,7 @@ Net::Works::Util - Utility subroutines for Net-Works
 
 =head1 VERSION
 
-version 0.17
+version 0.18
 
 =head1 DESCRIPTION
 
@@ -114,6 +115,10 @@ Olaf Alders <oalders@wundercounter.com>
 =item *
 
 Alexander Hartmaier <abraxxa@cpan.org>
+
+=item *
+
+Gregory Oschwald <oschwald@gmail.com>
 
 =item *
 

@@ -1,15 +1,16 @@
 package Net::Works::Network;
-$Net::Works::Network::VERSION = '0.17';
+$Net::Works::Network::VERSION = '0.18';
 use strict;
 use warnings;
 
+use Carp qw( confess );
 use List::AllUtils qw( any );
 use Math::Int128 qw( uint128 );
 use Net::Works::Address;
 use Net::Works::Types qw( IPInt PrefixLength NetWorksAddress Str );
 use Net::Works::Util
     qw( _integer_address_to_string _string_address_to_integer );
-use Socket 1.99 qw( inet_ntop inet_pton AF_INET AF_INET6 );
+use Socket 1.99 qw( inet_pton AF_INET AF_INET6 );
 
 use integer;
 
@@ -84,7 +85,7 @@ sub BUILD {
 
     my $max = $self->bits();
     if ( $self->prefix_length() > $max ) {
-        die $self->prefix_length()
+        confess $self->prefix_length()
             . ' is not a valid IP network prefix length';
     }
 
@@ -114,11 +115,11 @@ sub new_from_string {
 
         $integer = _string_address_to_integer( $address, $version );
 
-        die "$p{string} is not a valid IP network"
+        confess "$p{string} is not a valid IP network"
             unless defined $integer;
     }
     else {
-        die 'undef is not a valid IP network';
+        confess 'undef is not a valid IP network';
     }
 
     return $class->new(
@@ -254,7 +255,7 @@ sub contains {
         $last_integer  = $thing->last_as_integer();
     }
     else {
-        die
+        confess
             "$thing is not a Net::Works::Address or Net::Works::Network object";
     }
 
@@ -462,7 +463,7 @@ Net::Works::Network - An object representing a single IP address (4 or 6) subnet
 
 =head1 VERSION
 
-version 0.17
+version 0.18
 
 =head1 SYNOPSIS
 
@@ -687,6 +688,10 @@ Olaf Alders <oalders@wundercounter.com>
 =item *
 
 Alexander Hartmaier <abraxxa@cpan.org>
+
+=item *
+
+Gregory Oschwald <oschwald@gmail.com>
 
 =item *
 
