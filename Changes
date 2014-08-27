@@ -1,7 +1,13 @@
+0.19     2014-08-27
+
+- Fixed validation when a string with more than one slash (/) is passed to
+  Net::Works::Network->new_from_string.
+
+
 0.18     2014-07-08
 
 - Fixed warnings that would happen when trying to validate some bad data. This
-  could happen if you passed a string with no slash (/)_to
+  could happen if you passed a string with no slash (/) to
   Net::Works::Network->new_from_string.
 
 - Make all errors call Carp::confess instead of die for consistency.

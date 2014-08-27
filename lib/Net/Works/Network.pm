@@ -1,5 +1,5 @@
 package Net::Works::Network;
-$Net::Works::Network::VERSION = '0.18';
+$Net::Works::Network::VERSION = '0.19';
 use strict;
 use warnings;
 
@@ -96,31 +96,24 @@ sub new_from_string {
     my $class = shift;
     my %p     = @_;
 
-    my $integer;
-    my $version;
-    my $prefix_length;
+    die 'undef is not a valid IP network' unless defined $p{string};
 
-    if ( defined $p{string} ) {
-        ( my $address, $prefix_length ) = split '/', $p{string};
+    my ( $address, $prefix_length ) = split '/', $p{string}, 2;
 
-        $version
-            = $p{version} ? $p{version}
-            : inet_pton( AF_INET6, $address ) ? 6
-            :                                   4;
+    my $version
+        = $p{version} ? $p{version}
+        : inet_pton( AF_INET6, $address ) ? 6
+        :                                   4;
 
-        if ( $version == 6 && inet_pton( AF_INET, $address ) ) {
-            $prefix_length += 96;
-            $address = '::' . $address;
-        }
-
-        $integer = _string_address_to_integer( $address, $version );
-
-        confess "$p{string} is not a valid IP network"
-            unless defined $integer;
+    if ( $version == 6 && inet_pton( AF_INET, $address ) ) {
+        $prefix_length += 96;
+        $address = '::' . $address;
     }
-    else {
-        confess 'undef is not a valid IP network';
-    }
+
+    my $integer = _string_address_to_integer( $address, $version );
+
+    confess "$p{string} is not a valid IP network"
+        unless defined $integer;
 
     return $class->new(
         _integer      => $integer,
@@ -463,7 +456,7 @@ Net::Works::Network - An object representing a single IP address (4 or 6) subnet
 
 =head1 VERSION
 
-version 0.18
+version 0.19
 
 =head1 SYNOPSIS
 
@@ -678,28 +671,6 @@ Greg Oschwald <oschwald@cpan.org>
 =item *
 
 Olaf Alders <oalders@wundercounter.com>
-
-=back
-
-=head1 CONTRIBUTORS
-
-=over 4
-
-=item *
-
-Alexander Hartmaier <abraxxa@cpan.org>
-
-=item *
-
-Gregory Oschwald <oschwald@gmail.com>
-
-=item *
-
-TJ Mather <tjmather@maxmind.com>
-
-=item *
-
-William Stevenson <wstevenson@maxmind.com>
 
 =back
 

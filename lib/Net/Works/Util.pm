@@ -1,5 +1,5 @@
 package Net::Works::Util;
-$Net::Works::Util::VERSION = '0.18';
+$Net::Works::Util::VERSION = '0.19';
 use strict;
 use warnings;
 
@@ -83,7 +83,7 @@ Net::Works::Util - Utility subroutines for Net-Works
 
 =head1 VERSION
 
-version 0.18
+version 0.19
 
 =head1 DESCRIPTION
 
@@ -105,28 +105,6 @@ Greg Oschwald <oschwald@cpan.org>
 =item *
 
 Olaf Alders <oalders@wundercounter.com>
-
-=back
-
-=head1 CONTRIBUTORS
-
-=over 4
-
-=item *
-
-Alexander Hartmaier <abraxxa@cpan.org>
-
-=item *
-
-Gregory Oschwald <oschwald@gmail.com>
-
-=item *
-
-TJ Mather <tjmather@maxmind.com>
-
-=item *
-
-William Stevenson <wstevenson@maxmind.com>
 
 =back
 
