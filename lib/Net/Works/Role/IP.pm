@@ -1,5 +1,5 @@
 package Net::Works::Role::IP;
-$Net::Works::Role::IP::VERSION = '0.19';
+$Net::Works::Role::IP::VERSION = '0.20';
 use strict;
 use warnings;
 use namespace::autoclean 0.16;

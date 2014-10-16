@@ -1,5 +1,5 @@
 package Net::Works::Types;
-$Net::Works::Types::VERSION = '0.19';
+$Net::Works::Types::VERSION = '0.20';
 use strict;
 use warnings;
 

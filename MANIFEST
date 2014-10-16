@@ -6,7 +6,7 @@ MANIFEST
 META.json
 META.yml
 Makefile.PL
-README
+README.md
 dist.ini
 lib/Net/Works.pm
 lib/Net/Works/Address.pm

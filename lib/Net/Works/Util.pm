@@ -1,5 +1,5 @@
 package Net::Works::Util;
-$Net::Works::Util::VERSION = '0.19';
+$Net::Works::Util::VERSION = '0.20';
 use strict;
 use warnings;
 
@@ -83,7 +83,7 @@ Net::Works::Util - Utility subroutines for Net-Works
 
 =head1 VERSION
 
-version 0.19
+version 0.20
 
 =head1 DESCRIPTION
 

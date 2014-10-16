@@ -1,5 +1,5 @@
 package Net::Works;
-$Net::Works::VERSION = '0.19';
+$Net::Works::VERSION = '0.20';
 use 5.010000;
 
 # This is a hack to let us test code that requires a specific Net::Works
@@ -24,7 +24,7 @@ Net::Works - Sane APIs for IP addresses and networks
 
 =head1 VERSION
 
-version 0.19
+version 0.20
 
 =head1 DESCRIPTION
 

@@ -6,7 +6,7 @@
       "Olaf Alders <oalders@wundercounter.com>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Zilla version 5.020, CPAN::Meta::Converter version 2.142060",
+   "generated_by" : "Dist::Zilla version 5.020, CPAN::Meta::Converter version 2.142690",
    "license" : [
       "perl_5"
    ],
@@ -68,8 +68,8 @@
          "web" : "https://github.com/maxmind/Net-Works"
       }
    },
-   "version" : "0.19",
-   "x_authority" : "cpan:DROLSKY",
+   "version" : "0.20",
+   "x_authority" : "cpan:MAXMIND",
    "x_contributors" : [
       "Alexander Hartmaier <abraxxa@cpan.org>",
       "Gregory Oschwald <oschwald@gmail.com>",

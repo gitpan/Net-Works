@@ -1,5 +1,5 @@
 package Net::Works::Address;
-$Net::Works::Address::VERSION = '0.19';
+$Net::Works::Address::VERSION = '0.20';
 use strict;
 use warnings;
 
@@ -25,6 +25,7 @@ use integer;
 use overload (
     q{""} => '_overloaded_as_string',
     '<=>' => '_compare_overload',
+    'cmp' => '_compare_overload',
 );
 
 use Moo;
@@ -190,7 +191,7 @@ Net::Works::Address - An object representing a single IP (4 or 6) address
 
 =head1 VERSION
 
-version 0.19
+version 0.20
 
 =head1 SYNOPSIS
 
@@ -309,8 +310,8 @@ its IP range (address 0).
 
 =head1 OVERLOADING
 
-This class overloads numeric comparison, allowing you to compare two objects
-numerically and to sort them.
+This class overloads comparison, allowing you to compare two objects and to
+sort them (either as numbers or strings).
 
 It also overloads stringification to call the C<< $ip->as_string() >> method.
 

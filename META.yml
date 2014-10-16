@@ -11,7 +11,7 @@ build_requires:
 configure_requires:
   ExtUtils::MakeMaker: '0'
 dynamic_config: 0
-generated_by: 'Dist::Zilla version 5.020, CPAN::Meta::Converter version 2.142060'
+generated_by: 'Dist::Zilla version 5.020, CPAN::Meta::Converter version 2.142690'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -36,8 +36,8 @@ requires:
 resources:
   bugtracker: https://github.com/maxmind/Net-Works/issues
   repository: git://github.com/maxmind/Net-Works.git
-version: '0.19'
-x_authority: cpan:DROLSKY
+version: '0.20'
+x_authority: cpan:MAXMIND
 x_contributors:
   - 'Alexander Hartmaier <abraxxa@cpan.org>'
   - 'Gregory Oschwald <oschwald@gmail.com>'
